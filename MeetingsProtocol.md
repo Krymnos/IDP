@@ -42,4 +42,10 @@
   - investigate open tracing
   ..- possibly use kafka to manage all the data gathered from all the nodes
   
-  
+  ### Tasks after Initial Presentation 08.11.17
+   - Implement first Pipeline with gRPC and limited Metadata (Kevin)
+   - Solve Question: How should the Metadata be stored and available? (When, where, how) (Makrram)
+   - Dig deeper in to the use case from the customers perspective: What parameters do we need save?
+   ..- First use case: error detection (Vinoth)
+   ..- second (possible) use case: provide proof of who consumed/produced how much and at what time (Ron)
+   - come up with more use cases (Gerrit, Dashan, Talal)
