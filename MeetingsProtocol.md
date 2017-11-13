@@ -49,3 +49,23 @@
    ..- First use case: error detection (Vinoth)
    ..- second (possible) use case: provide proof of who consumed/produced how much and at what time (Ron)
    - come up with more use cases (Gerrit, Dashan, Talal)
+
+## Meeting 13.11.17
+
+### Issue 1: gRPC prototype
+ - first API used by the sensor to push data to the first server is basically done
+ - processing this data server side is up next.
+ 
+### Use cases
+ - base is still error detection
+ - future use-case: full provenance in system where everybody can produce and consume electricity
+
+### new tasks
+ - @Everybody write notes to github issues!
+ - Why do we use gRPC vs. others (e.g. zeroMQ)? (Kevin but everybody can contribute information to github issue)
+ - look in to deployment with docker (Gerrit)
+ - create requirements as google docs
+ ..- list of requirements with motivations
+ ..- section for each major decision we are facing
+ ..- this document should motivate our approach to developing the prototype until decemeber after that we will evaluate the results
+ ..- due to friday 17.11.
