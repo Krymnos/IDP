@@ -1,0 +1,42 @@
+// created by Kevin @ 6th Nov. 2017
+
+// provide proto version
+syntax = "proto3";
+
+// TODO specify options... e.g.
+// option java_package = "JAVA_PACKAGE";
+
+
+package provenance_system;
+
+
+// prodide service definition:
+// service some_service {
+// rpc some_function(parameters) returns (reply) {}
+// ...
+// ...
+// }
+
+// Grid_data message
+// composition of meter- and measurement_message
+// in compliance with the data model provided from grid data
+message Grid_data {
+  optional measurement_message measurement = 1;
+  optional meter_message meter = 2;
+}
+
+// measurement_message
+message measurement_message {
+  optional int32 meter_id = 1;
+  optional int32 metric_id = 2;
+  optional int32 timestamp = 3;
+  optional double values = 4;
+}
+
+// meter message
+message meter_message {
+  optional int32 meter_id = 1;
+  optional string meter_location = 2;
+  optional string meter_freq_pack = 3;
+  optional int32 meter_capture_freq = 4;
+}
