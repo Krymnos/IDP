@@ -21,26 +21,26 @@ service gateway {
 // composition of meter- and measurement_message
 // in compliance with the data model provided from grid data
 message Grid_data {
-  optional measurement_message measurement = 1;
-  optional meter_message meter = 2;
+  measurement_message measurement = 1;
+  meter_message meter = 2;
 }
 
 // measurement_message
 message measurement_message {
-  optional int32 meter_id = 1;
-  optional int32 metric_id = 2;
-  optional int32 timestamp = 3;
-  optional string values = 4;
+  int32 meter_id = 1;
+  int32 metric_id = 2;
+  int32 timestamp = 3;
+  string values = 4;
 }
 
 // meter message
 message meter_message {
-  optional int32 meter_id = 1;
-  optional string meter_location = 2;
-  optional string meter_freq_pack = 3;
-  optional int32 meter_capture_freq = 4;
+  int32 meter_id = 1;
+  string meter_location = 2;
+  string meter_freq_pack = 3;
+  int32 meter_capture_freq = 4;
 }
 
 message reply {
-  optional string response_code=1;
+  string response_code=1;
 }
