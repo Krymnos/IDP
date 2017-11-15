@@ -69,3 +69,13 @@
  ..- section for each major decision we are facing
  ..- this document should motivate our approach to developing the prototype until decemeber after that we will evaluate the results
  ..- due to friday 17.11.
+
+## Meeting 15.11.17
+
+### revised tasks
+- Design of the tracing system (Mukrram, Darshan) 
+- Storage systems for tracing data (Talal)
+- Visualization of latencies and dependcies (Vinoth)
+- discuss impelmentation of pipeline grpc vs zero MQ = should we implement both to benchmark ourselves? (Kevin, Gerrit)
+- investigate parameters (Ron)
+- derive requirements to list
