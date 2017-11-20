@@ -7,6 +7,21 @@ import grpc
 
 import pipeline_pb2
 import pipeline_pb2_grpc
+import argparse
+import sys
+
+DEFAULT_PORT = 50051
+
+def main(argv):
+    parser = prep_argparse()
+    args = parser.parse_args(argv)
+    run(args)
+
+def prep_argparse():
+    parser = argparse.ArgumentParser(description='client to send RPC calls to gateway')
+    parser.add_argument('client', help='start client')
+    parser.add_argument('-p', '--port', help="Default port for the server")
+    return parser
 
 def make_grid_data_message(meterid,metricid,timestamp,values,meterlocation,meterfreqpack,metercapturefreq):
     return pipeline_pb2.Grid_data(
@@ -25,11 +40,18 @@ def gateway_push_data(stub):
     print ("data pushed")
     print ("Response Code: %s " % data_push_response.response_code)
 
-def run():
-    channel = grpc.insecure_channel('localhost:50051')
+def run(args):
+    port = int(args.port) if args.port is not None else DEFAULT_PORT
+    print(port)
+    channel = grpc.insecure_channel('localhost:%s' % port)
     stub = pipeline_pb2_grpc.gatewayStub(channel)
     print ("----push_data----")
     gateway_push_data(stub)
 
 if __name__ == '__main__':
-    run()
+    print ("Example usage:")
+    print ("python gateway_client.py  -p \"50051\" ")
+    main(sys.argv)
+
+
+
