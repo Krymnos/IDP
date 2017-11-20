@@ -79,3 +79,27 @@
 - discuss impelmentation of pipeline grpc vs zero MQ = should we implement both to benchmark ourselves? (Kevin, Gerrit)
 - investigate parameters (Ron)
 - derive requirements to list
+
+## Meeting 20.11.17
+
+### (tracing) database solution
+ - investigated opentsdb
+ ..- optimized for timestamps
+ ..- therefore relevant for our IoT context
+ - investigated Neo4j
+ 
+ ### question of 0mq vs. gRPC
+ - not clear which is better
+ ..- different papers and forums do not agree which is better
+ ..- for the sake of a first prototype gRPC seems less effort to implement
+ 
+ ### what is the actual tracing system going to look like
+  - still not clear what framework/technologies we use to implement
+  
+ ### Components of our project so far
+  - general data model
+  - pipeline
+  - tracing system
+  - tracing db
+  - frontend and visualization
+ 
