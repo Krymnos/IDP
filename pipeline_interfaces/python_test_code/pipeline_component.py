@@ -44,7 +44,7 @@ def prep_argparse():
     parser.add_argument('-pn', '--port_next', help="port for the next_hop (only for role gateway and source)", default=50051)
     parser.add_argument('-hn', '--host_next', help="host for the next hop (only for role gateway and source)", default="localhost")
     parser.add_argument('-r', '--role', help="role in pipeline {source, gateway, endpoint} ", default="source")
-    parser.add_argument('-st', '--storagetime', help="specify the storage time of messages (only for gateways and endpoints)")
+    # parser.add_argument('-st', '--storagetime', help="specify the storage time of messages (only for gateways and endpoints)")
     parser.add_argument('-i', '--interval', help="interval (seconds) a message will be generated and sent (only for role source)", default=1)
     parser.add_argument('-n', '--number_msg', help="number of messages that will be sent (only for role source)")
     return parser
@@ -72,7 +72,7 @@ def run_as_source(args):
     port = int(args.port_next) if args.port_next is not None else DEFAULT_PORT
     interval = int(args.interval)
     numberOfMsgs = int(args.number_msg) if args.number_msg is not None else -1
-    receiver = args.host_next if args.number_msg is not None else "localhost"
+    receiver = args.host_next if args.host_next is not None else "localhost"
     
     channel = grpc.insecure_channel('%s:%s' % (receiver, port))
     stub = pipeline_pb2_grpc.gatewayStub(channel)
@@ -84,7 +84,9 @@ def run_as_source(args):
     while (sentMsgs != numberOfMsgs):
         gateway_push_data(stub)
         sentMsgs += 1
-        time.sleep(interval)   
+        time.sleep(interval)
+
+    print (" FINISHED. Sent messages: %d " % sentMsgs);
       
 
 
