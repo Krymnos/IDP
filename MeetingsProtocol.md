@@ -103,3 +103,16 @@
   - tracing db
   - frontend and visualization
  
+## Meeting 22.11.
+
+### new task
+ - try graph-based database for saving dependencies together with a document based db for saving the larger context information (Vinoth, Talal)
+ - try a noSQL DB for saving both dependencies and context together (Darshan)
+ - send dominik the .proto file (Kevin)
+ - finalize parameters for context (Mukrram, Ron)
+ - type of queries we will support from the customer perspective (Mukrram)
+ - look on existing tracing systems regarding:
+ ..- interface to pipeline (Kevin, Ron)
+ ..- interface to database (Gerrit)
+ ..- what DBs are used in tracing (Vinoth, darshan, Talal)
+ 
