@@ -6,7 +6,6 @@ import pipeline_pb2
 import pipeline_pb2_grpc
 import argparse
 import sys
-import gateway_client as gc
 
 _ONE_DAY_IN_SECONDS = 60 * 60 * 24
 DEFAULT_PORT = 50051
@@ -18,7 +17,7 @@ class GatewayServicer(pipeline_pb2_grpc.gatewayServicer):
         stub = pipeline_pb2_grpc.gatewayStub(channel)
         print ("----push_data----")
         grid_data_list = [data[0],data[1]]
-        data_iterator = gc.generate_iterator(grid_data_list)
+        data_iterator = generate_iterator(grid_data_list)
         data_push_response = stub.push_data(data_iterator)
         print ("----data pushed----")
         print ("Response Code: %s " % data_push_response.response_code)
@@ -99,14 +98,12 @@ def run_as_gateway(args):
     global port_next
     global host_next
 
-    port_next = int(args.port_next) if args.port_next is not None else None
+    port_next = int(args.port_next) if args.port_next is not None else DEFAULT_PORT
     host_next = args.host_next if args.host_next is not None else "localhost"
     port = int(args.port) if args.port is not None else DEFAULT_PORT
     
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     pipeline_pb2_grpc.add_gatewayServicer_to_server(GatewayServicer(), server)
-
-    host = args.host_next
     
     ## channel_in
     server.add_insecure_port('[::]:%s' % port)
