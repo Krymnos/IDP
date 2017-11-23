@@ -40,3 +40,36 @@ Running the script **simple_pipeline.sh** starts a non terminating pipeline on l
 in {source,gateway,endpoint}.log
 
         Source -> Gateway -> Enpoint
+
+## Docker
+
+### build the image
+build the image for the pipeline component:
+
+        docker build -t pipeline .
+
+### Pipeline in one container
+To start the simple_pipeline in a single container run:
+
+        docker run pipeline:latest
+        
+To get the intermediate results from each component:
+
+        docker exec <container-id> cat source.log
+        docker exec <container-id> cat source.log
+        docker exec <container-id> cat source.log
+
+To get the container-id, you might use 
+
+        docker ps
+
+
+### Use docker compose
+
+To start every component within an own container, run docker-compose.
+
+        docker-compose up
+
+The output here is directly written to the container console.
+
+
