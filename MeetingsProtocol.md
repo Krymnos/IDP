@@ -40,14 +40,14 @@
  ### impementing tracing with gRPC
   - gRPC offers interfaces for tracing system to connect to it (see https://github.com/grpc-ecosystem/grpc-opentracing/tree/master/java)
   - investigate open tracing
-  ..- possibly use kafka to manage all the data gathered from all the nodes
+      - possibly use kafka to manage all the data gathered from all the nodes
   
   ### Tasks after Initial Presentation 08.11.17
    - Implement first Pipeline with gRPC and limited Metadata (Kevin)
    - Solve Question: How should the Metadata be stored and available? (When, where, how) (Makrram)
    - Dig deeper in to the use case from the customers perspective: What parameters do we need save?
-   ..- First use case: error detection (Vinoth)
-   ..- second (possible) use case: provide proof of who consumed/produced how much and at what time (Ron)
+       - First use case: error detection (Vinoth)
+       - second (possible) use case: provide proof of who consumed/produced how much and at what time (Ron)
    - come up with more use cases (Gerrit, Dashan, Talal)
 
 ## Meeting 13.11.17
@@ -65,10 +65,10 @@
  - Why do we use gRPC vs. others (e.g. zeroMQ)? (Kevin but everybody can contribute information to github issue)
  - look in to deployment with docker (Gerrit)
  - create requirements as google docs
- ..- list of requirements with motivations
- ..- section for each major decision we are facing
- ..- this document should motivate our approach to developing the prototype until decemeber after that we will evaluate the results
- ..- due to friday 17.11.
+     - list of requirements with motivations
+     - section for each major decision we are facing
+     - this document should motivate our approach to developing the prototype until decemeber after that we will evaluate the results
+     - due to friday 17.11.
 
 ## Meeting 15.11.17
 
@@ -84,14 +84,14 @@
 
 ### (tracing) database solution
  - investigated opentsdb
- ..- optimized for timestamps
- ..- therefore relevant for our IoT context
+     - optimized for timestamps
+     - therefore relevant for our IoT context
  - investigated Neo4j
  
  ### question of 0mq vs. gRPC
  - not clear which is better
- ..- different papers and forums do not agree which is better
- ..- for the sake of a first prototype gRPC seems less effort to implement
+     - different papers and forums do not agree which is better
+     - for the sake of a first prototype gRPC seems less effort to implement
  
  ### what is the actual tracing system going to look like
   - still not clear what framework/technologies we use to implement
@@ -112,7 +112,7 @@
  - finalize parameters for context (Mukrram, Ron)
  - type of queries we will support from the customer perspective (Mukrram)
  - look on existing tracing systems regarding:
- ..- interface to pipeline (Kevin, Ron)
- ..- interface to database (Gerrit)
- ..- what DBs are used in tracing (Vinoth, darshan, Talal)
+     - interface to pipeline (Kevin, Ron)
+     - interface to database (Gerrit)
+     - what DBs are used in tracing (Vinoth, darshan, Talal)
  
