@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='pipeline.proto',
   package='provenance_system',
   syntax='proto3',
-  serialized_pb=_b('\n\x0epipeline.proto\x12\x11provenance_system\"y\n\tGrid_data\x12;\n\x0bmeasurement\x18\x01 \x01(\x0b\x32&.provenance_system.measurement_message\x12/\n\x05meter\x18\x02 \x01(\x0b\x32 .provenance_system.meter_message\"]\n\x13measurement_message\x12\x10\n\x08meter_id\x18\x01 \x01(\x05\x12\x11\n\tmetric_id\x18\x02 \x01(\x05\x12\x11\n\ttimestamp\x18\x03 \x01(\x05\x12\x0e\n\x06values\x18\x04 \x01(\t\"n\n\rmeter_message\x12\x10\n\x08meter_id\x18\x01 \x01(\x05\x12\x16\n\x0emeter_location\x18\x02 \x01(\t\x12\x17\n\x0fmeter_freq_pack\x18\x03 \x01(\t\x12\x1a\n\x12meter_capture_freq\x18\x04 \x01(\x05\"\x1e\n\x05reply\x12\x15\n\rresponse_code\x18\x01 \x01(\t2R\n\x07gateway\x12G\n\tpush_data\x12\x1c.provenance_system.Grid_data\x1a\x18.provenance_system.reply\"\x00(\x01\x62\x06proto3')
+  serialized_pb=_b('\n\x0epipeline.proto\x12\x11provenance_system\"H\n\tGrid_data\x12;\n\x0bmeasurement\x18\x01 \x01(\x0b\x32&.provenance_system.measurement_message\"]\n\x13measurement_message\x12\x10\n\x08meter_id\x18\x01 \x01(\x05\x12\x11\n\tmetric_id\x18\x02 \x01(\x05\x12\x11\n\ttimestamp\x18\x03 \x01(\x05\x12\x0e\n\x06values\x18\x04 \x01(\t\"\x1e\n\x05reply\x12\x15\n\rresponse_code\x18\x01 \x01(\t2R\n\x07gateway\x12G\n\tpush_data\x12\x1c.provenance_system.Grid_data\x1a\x18.provenance_system.reply\"\x00(\x01\x62\x06proto3')
 )
 
 
@@ -39,13 +39,6 @@ _GRID_DATA = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
-    _descriptor.FieldDescriptor(
-      name='meter', full_name='provenance_system.Grid_data.meter', index=1,
-      number=2, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
   ],
   extensions=[
   ],
@@ -59,7 +52,7 @@ _GRID_DATA = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=37,
-  serialized_end=158,
+  serialized_end=109,
 )
 
 
@@ -110,60 +103,8 @@ _MEASUREMENT_MESSAGE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=160,
-  serialized_end=253,
-)
-
-
-_METER_MESSAGE = _descriptor.Descriptor(
-  name='meter_message',
-  full_name='provenance_system.meter_message',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='meter_id', full_name='provenance_system.meter_message.meter_id', index=0,
-      number=1, type=5, cpp_type=1, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='meter_location', full_name='provenance_system.meter_message.meter_location', index=1,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='meter_freq_pack', full_name='provenance_system.meter_message.meter_freq_pack', index=2,
-      number=3, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='meter_capture_freq', full_name='provenance_system.meter_message.meter_capture_freq', index=3,
-      number=4, type=5, cpp_type=1, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=255,
-  serialized_end=365,
+  serialized_start=111,
+  serialized_end=204,
 )
 
 
@@ -193,15 +134,13 @@ _REPLY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=367,
-  serialized_end=397,
+  serialized_start=206,
+  serialized_end=236,
 )
 
 _GRID_DATA.fields_by_name['measurement'].message_type = _MEASUREMENT_MESSAGE
-_GRID_DATA.fields_by_name['meter'].message_type = _METER_MESSAGE
 DESCRIPTOR.message_types_by_name['Grid_data'] = _GRID_DATA
 DESCRIPTOR.message_types_by_name['measurement_message'] = _MEASUREMENT_MESSAGE
-DESCRIPTOR.message_types_by_name['meter_message'] = _METER_MESSAGE
 DESCRIPTOR.message_types_by_name['reply'] = _REPLY
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
@@ -219,13 +158,6 @@ measurement_message = _reflection.GeneratedProtocolMessageType('measurement_mess
   ))
 _sym_db.RegisterMessage(measurement_message)
 
-meter_message = _reflection.GeneratedProtocolMessageType('meter_message', (_message.Message,), dict(
-  DESCRIPTOR = _METER_MESSAGE,
-  __module__ = 'pipeline_pb2'
-  # @@protoc_insertion_point(class_scope:provenance_system.meter_message)
-  ))
-_sym_db.RegisterMessage(meter_message)
-
 reply = _reflection.GeneratedProtocolMessageType('reply', (_message.Message,), dict(
   DESCRIPTOR = _REPLY,
   __module__ = 'pipeline_pb2'
@@ -241,8 +173,8 @@ _GATEWAY = _descriptor.ServiceDescriptor(
   file=DESCRIPTOR,
   index=0,
   options=None,
-  serialized_start=399,
-  serialized_end=481,
+  serialized_start=238,
+  serialized_end=320,
   methods=[
   _descriptor.MethodDescriptor(
     name='push_data',
