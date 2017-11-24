@@ -13,8 +13,6 @@ package provenance_system;
 // prodide service definition:
 service gateway {
   rpc push_data(stream Grid_data) returns (reply) {}
-
-
 }
 
 // Grid_data message
@@ -22,7 +20,6 @@ service gateway {
 // in compliance with the data model provided from grid data
 message Grid_data {
   measurement_message measurement = 1;
-  meter_message meter = 2;
 }
 
 // measurement_message
@@ -31,14 +28,6 @@ message measurement_message {
   int32 metric_id = 2;
   int32 timestamp = 3;
   string values = 4;
-}
-
-// meter message
-message meter_message {
-  int32 meter_id = 1;
-  string meter_location = 2;
-  string meter_freq_pack = 3;
-  int32 meter_capture_freq = 4;
 }
 
 message reply {
