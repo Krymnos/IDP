@@ -115,4 +115,23 @@
      - interface to pipeline (Kevin, Ron)
      - interface to database (Gerrit)
      - what DBs are used in tracing (Vinoth, darshan, Talal)
+    
+## Meeting 29.11
+
+### interface of grpc and tracing
+ - open tracing library as mentioned before
+ - still need to decide on parameters before implementing interface
+ - writing our own collector might be feasible
+ - scientific comparisons of different implementations (e.g. jaeger vs. zipkin) not found
+ 
+### databases
+ - ? results from talal and vinoth
+
+
+### tasks
+ - finalize parameters (Mukrram)
+ - Implementing Collector based ZipKin (Kevin, Ron)
+ - Implementing Collector based on Jaeger (Gerrit)
+ - Create UI (Darshan)
+  
  
