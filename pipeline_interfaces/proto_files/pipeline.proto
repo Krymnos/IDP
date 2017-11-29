@@ -24,10 +24,10 @@ message Grid_data {
 
 // measurement_message
 message measurement_message {
-  int32 meter_id = 1;
-  int32 metric_id = 2;
-  int32 timestamp = 3;
-  string values = 4;
+  string meter_id = 1;
+  string metric_id = 2;
+  int64 timestamp = 3;
+  double value = 4;
 }
 
 message reply {
