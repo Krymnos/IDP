@@ -134,4 +134,15 @@
  - Implementing Collector based on Jaeger (Gerrit)
  - Create UI (Darshan)
   
+  
+ ## Meeting 4.12.
+ 
+ ### tasks
+ - Benchmark both DBs based on dummy (Vinoth, Darshan) Thursday
+ - port pipeline to java (Gerrit, Kevin)
+ - implement aggregation of messages on pipeline level for different nodes (Gerrit)
+ - implement a provenance process that collects data based on the configuration file and writes it to the db (Mukrram)
+ - hardcode template for GUI (Ron)
+ 
+ 
  
