@@ -4,7 +4,8 @@
 syntax = "proto3";
 
 // TODO specify options... e.g.
-// option java_package = "JAVA_PACKAGE";
+// specifies java package name of our pipeline implementation
+option java_package = "de.idp.pipeline";
 
 
 package provenance_system;
