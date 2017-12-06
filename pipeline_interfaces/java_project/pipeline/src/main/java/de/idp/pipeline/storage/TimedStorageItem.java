@@ -15,7 +15,7 @@ class TimedStorageItem<T> implements Delayed {
   }
 
   @Override public long getDelay(TimeUnit unit) {
-    return unit.convert(System.currentTimeMillis() - creationTime - delay, TimeUnit.MILLISECONDS);
+    return unit.convert(creationTime - System.currentTimeMillis() + delay, TimeUnit.MILLISECONDS);
   }
 
   @Override public int compareTo(Delayed o) {
