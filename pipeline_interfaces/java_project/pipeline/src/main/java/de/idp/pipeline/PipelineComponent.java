@@ -62,8 +62,9 @@ public class PipelineComponent {
         
         System.out.println(args.toString());
         // Start server with args.port or default port
-        if(args.port == null) {
-        	gatewayServer server = new gatewayServer(50051);
+        if(args.port == null || args.port_next == null || args.host_next == null || args.aggregationTime == null) {
+        	// use default values if a parameter is not set
+        	gatewayServer server = new gatewayServer(50051, 50052, "localhost", 10);
         	server.start();
         	server.blockUntilShutdown();
         	
@@ -72,7 +73,8 @@ public class PipelineComponent {
         	//client.pushData(testMessages);
         	 
         } else {
-        	gatewayServer server = new gatewayServer(args.port);
+        	// implement pipeline topology and config parameters
+        	gatewayServer server = new gatewayServer(args.port, args.port_next, args.host_next, args.aggregationTime);
         	server.start();
         	server.blockUntilShutdown();
         	
@@ -89,10 +91,17 @@ class gatewayServer {
 
 	private final int port;
 	private final Server server;
+	private final int portNext;
+	private final String hostNext;
+	private final int aggregationTime;
 	
-	public gatewayServer(int port) throws IOException{
+	
+	public gatewayServer(int port, int portNext, String hostNext, int aggregationTime) throws IOException{
 	    this.port = port;
-	    server = ServerBuilder.forPort(port).addService(new pushDataService()).build();
+	    this.portNext = portNext;
+	    this.hostNext = hostNext;
+	    this.aggregationTime = aggregationTime;
+	    server = ServerBuilder.forPort(port).addService(new pushDataService(hostNext, portNext, aggregationTime)).build();
 	    
 	}
 	public void start() throws IOException{
@@ -121,7 +130,16 @@ class gatewayServer {
 	// implement push data service
 	private static class pushDataService extends gatewayImplBase{
 		private static final Logger logger = Logger.getLogger(PipelineComponent.class.getName());
+		private final int portNext;
+		private final String hostNext;
+		private final int aggregationTime;
 		
+		public pushDataService(String hostNext, int portNext, int aggregationTime) {
+			this.portNext = portNext;
+		    this.hostNext = hostNext;
+		    this.aggregationTime = aggregationTime;
+		}
+
 		@Override
 		public StreamObserver<Grid_data> pushData(final StreamObserver<reply> responseObserver){
 			return new StreamObserver<Grid_data>() {
@@ -155,7 +173,7 @@ class gatewayServer {
 		            // Signal the end of work when the client ends the request stream.
 		        	String response_content = "200";
 		            logger.info("Response: " + response_content);
-		            gatewayClient client = new gatewayClient("localhost", 50052);
+		            gatewayClient client = new gatewayClient(hostNext, portNext);
 		            try {
 						client.pushData(gDataList);	
 					} catch (InterruptedException e) {
