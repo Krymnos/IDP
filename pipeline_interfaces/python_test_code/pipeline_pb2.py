@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='pipeline.proto',
   package='provenance_system',
   syntax='proto3',
-  serialized_pb=_b('\n\x0epipeline.proto\x12\x11provenance_system\"H\n\tGrid_data\x12;\n\x0bmeasurement\x18\x01 \x01(\x0b\x32&.provenance_system.measurement_message\"]\n\x13measurement_message\x12\x10\n\x08meter_id\x18\x01 \x01(\x05\x12\x11\n\tmetric_id\x18\x02 \x01(\x05\x12\x11\n\ttimestamp\x18\x03 \x01(\x05\x12\x0e\n\x06values\x18\x04 \x01(\t\"\x1e\n\x05reply\x12\x15\n\rresponse_code\x18\x01 \x01(\t2R\n\x07gateway\x12G\n\tpush_data\x12\x1c.provenance_system.Grid_data\x1a\x18.provenance_system.reply\"\x00(\x01\x62\x06proto3')
+  serialized_pb=_b('\n\x0epipeline.proto\x12\x11provenance_system\"H\n\tGrid_data\x12;\n\x0bmeasurement\x18\x01 \x01(\x0b\x32&.provenance_system.measurement_message\"\\\n\x13measurement_message\x12\x10\n\x08meter_id\x18\x01 \x01(\t\x12\x11\n\tmetric_id\x18\x02 \x01(\t\x12\x11\n\ttimestamp\x18\x03 \x01(\x03\x12\r\n\x05value\x18\x04 \x01(\x01\"\x1e\n\x05reply\x12\x15\n\rresponse_code\x18\x01 \x01(\t2R\n\x07gateway\x12G\n\tpush_data\x12\x1c.provenance_system.Grid_data\x1a\x18.provenance_system.reply\"\x00(\x01\x42\x11\n\x0f\x64\x65.idp.pipelineb\x06proto3')
 )
 
 
@@ -65,29 +65,29 @@ _MEASUREMENT_MESSAGE = _descriptor.Descriptor(
   fields=[
     _descriptor.FieldDescriptor(
       name='meter_id', full_name='provenance_system.measurement_message.meter_id', index=0,
-      number=1, type=5, cpp_type=1, label=1,
-      has_default_value=False, default_value=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
       name='metric_id', full_name='provenance_system.measurement_message.metric_id', index=1,
-      number=2, type=5, cpp_type=1, label=1,
-      has_default_value=False, default_value=0,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
       name='timestamp', full_name='provenance_system.measurement_message.timestamp', index=2,
-      number=3, type=5, cpp_type=1, label=1,
+      number=3, type=3, cpp_type=2, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='values', full_name='provenance_system.measurement_message.values', index=3,
-      number=4, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
+      name='value', full_name='provenance_system.measurement_message.value', index=3,
+      number=4, type=1, cpp_type=5, label=1,
+      has_default_value=False, default_value=float(0),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
@@ -104,7 +104,7 @@ _MEASUREMENT_MESSAGE = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=111,
-  serialized_end=204,
+  serialized_end=203,
 )
 
 
@@ -134,8 +134,8 @@ _REPLY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=206,
-  serialized_end=236,
+  serialized_start=205,
+  serialized_end=235,
 )
 
 _GRID_DATA.fields_by_name['measurement'].message_type = _MEASUREMENT_MESSAGE
@@ -166,6 +166,8 @@ reply = _reflection.GeneratedProtocolMessageType('reply', (_message.Message,), d
 _sym_db.RegisterMessage(reply)
 
 
+DESCRIPTOR.has_options = True
+DESCRIPTOR._options = _descriptor._ParseOptions(descriptor_pb2.FileOptions(), _b('\n\017de.idp.pipeline'))
 
 _GATEWAY = _descriptor.ServiceDescriptor(
   name='gateway',
@@ -173,8 +175,8 @@ _GATEWAY = _descriptor.ServiceDescriptor(
   file=DESCRIPTOR,
   index=0,
   options=None,
-  serialized_start=238,
-  serialized_end=320,
+  serialized_start=237,
+  serialized_end=319,
   methods=[
   _descriptor.MethodDescriptor(
     name='push_data',

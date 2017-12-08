@@ -50,16 +50,16 @@ def prep_argparse():
 
 ###### code for a data source
 
-def make_grid_data_message(meterid,metricid,timestamp,values):
+def make_grid_data_message(meterid,metricid,timestamp,value):
     return pipeline_pb2.Grid_data(
-        measurement = pipeline_pb2.measurement_message(meter_id=meterid,metric_id=metricid, timestamp=timestamp, values=values))
+        measurement = pipeline_pb2.measurement_message(meter_id=meterid,metric_id=metricid, timestamp=timestamp, value=value))
 
 def generate_iterator(grid_data_list):
     for i in grid_data_list:
         yield i
 
 def gateway_push_data(stub):
-    grid_data_list = [make_grid_data_message(1,2,1645,"99"),make_grid_data_message(2,2,1646,"90")]
+    grid_data_list = [make_grid_data_message("1","2",1645,99),make_grid_data_message("2","2",1646,90)]
 
     data_iterator = generate_iterator(grid_data_list)
     data_push_response = stub.push_data(data_iterator)

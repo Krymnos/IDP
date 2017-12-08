@@ -23,17 +23,16 @@ def prep_argparse():
     parser.add_argument('-p', '--port', help="Default port for the server")
     return parser
 
-def make_grid_data_message(meterid,metricid,timestamp,values,meterlocation,meterfreqpack,metercapturefreq):
+def make_grid_data_message(meterid,metricid,timestamp,values):
     return pipeline_pb2.Grid_data(
-        measurement = pipeline_pb2.measurement_message(meter_id=meterid,metric_id=metricid, timestamp=timestamp, values=values),
-        meter = pipeline_pb2.meter_message(meter_id=meterid, meter_location=meterlocation, meter_freq_pack=meterfreqpack, meter_capture_freq=metercapturefreq))
+        measurement = pipeline_pb2.measurement_message(meter_id=meterid,metric_id=metricid, timestamp=timestamp, values=values))
 
 def generate_iterator(grid_data_list):
     for i in grid_data_list:
         yield i
 
 def gateway_push_data(stub):
-    grid_data_list = [make_grid_data_message(1,2,1645,"99","berlin","5",5),make_grid_data_message(2,2,1646,"90","Duesseldorf","5",5)]
+    grid_data_list = [make_grid_data_message(1,2,1645,"99"),make_grid_data_message(2,2,1646,"90")]
 
     data_iterator = generate_iterator(grid_data_list)
     data_push_response = stub.push_data(data_iterator)
