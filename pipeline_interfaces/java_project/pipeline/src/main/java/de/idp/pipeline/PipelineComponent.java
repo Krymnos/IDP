@@ -22,14 +22,13 @@ import java.util.logging.Logger;
 public class PipelineComponent {
 	
 	private static final Logger logger = Logger.getLogger(PipelineComponent.class.getName());
-	
 	public static Grid_data newGridData(String meterId, String metricId, long timestamp, double value) {
 		return Grid_data.newBuilder().setMeasurement(measurement_message.newBuilder().setMeterId(meterId).setMetricId(metricId).setTimestamp(timestamp).setValue(value).build()).build();	
 	}
 	
 	
 	public static void main(String[] argv) throws IOException, InterruptedException{
-        Args args = new Args();
+		Args args = new Args();
         JCommander comm = JCommander.newBuilder()
                 .addObject(args)
                 .build();
@@ -45,6 +44,7 @@ public class PipelineComponent {
         if(args.port == null || args.port_next == null || args.host_next == null || args.aggregationTime == null || args.storageTime == null) {
         	// use default values if a parameter is not set
         	gatewayServer server = new gatewayServer(50051, 50052, "localhost", 10, 5);
+        	server.setVerbose(args.verbose);
         	server.start();
         	server.blockUntilShutdown();
         	
@@ -55,6 +55,7 @@ public class PipelineComponent {
         } else {
         	// implement pipeline topology and config parameters
         	gatewayServer server = new gatewayServer(args.port, args.port_next, args.host_next, args.aggregationTime, args.storageTime);
+			server.setVerbose(args.verbose);
         	server.start();
         	server.blockUntilShutdown();
         	
@@ -75,12 +76,18 @@ class gatewayServer {
 	private final String hostNext;
 	static TimedAggregationStorage<measurement_message> aggregationStorage;
 
+	gatewayServer.pushDataService pushDataService;
 	public gatewayServer(int port, int portNext, String hostNext, int aggregationTime_s, int storagetime_m) throws IOException{
 	    this.port = port;
 	    this.portNext = portNext;
 	    this.hostNext = hostNext;
 
-	    server = ServerBuilder.forPort(port).addService(new pushDataService(hostNext, portNext, aggregationTime_s, storagetime_m)).build();
+	    this.pushDataService = new pushDataService(hostNext, portNext, aggregationTime_s, storagetime_m);
+	    server = ServerBuilder.forPort(port).addService(pushDataService).build();
+	}
+
+	public void setVerbose(boolean verbose){
+		this.pushDataService.setVerbose(verbose);
 	}
 
 	public void start() throws IOException{
@@ -112,7 +119,7 @@ class gatewayServer {
 		private final int portNext;
 		private final String hostNext;
 		private final int aggregationTime_s;
-
+		private boolean verbose;
 
 		public pushDataService(String hostNext, int portNext, int aggregationTime_s, int storagetime_m) {
 			this.portNext = portNext;
@@ -126,6 +133,10 @@ class gatewayServer {
 					 }
 				 };
 			 }
+		}
+
+		public void setVerbose(boolean verbose){
+			this.verbose = verbose;
 		}
 
 		@Override
@@ -142,6 +153,10 @@ class gatewayServer {
 			          String message = request.toString();
 			          logger.info("Request: " + message);
 			          gDataList.add(request);
+
+			          if(verbose){
+						  System.out.println("got message: " + request.toString());
+					  }
 
 			          if(aggregationTime_s > 0){
 						aggregationStorage.put(request.getMeasurement());
@@ -282,6 +297,9 @@ class Args {
     @Parameter(names = {"-st", "--storagetime"}, description = "specify the storagetime of messages / aggregation (in seconds)")
     public Integer storageTime;
 
+	@Parameter(names = {"-v", "--verbose"}, description = "prints incomming messages to stdout")
+	public boolean verbose;
+
     @Parameter(names = "--help", description = "prints this help", help = true)
     public boolean help;
 
@@ -292,6 +310,7 @@ class Args {
               ", host_next='" + host_next + '\'' +
               ", aggregationTime=" + aggregationTime +
               ", storageTime=" + storageTime +
+			  ", verbose=" + verbose +
               '}';
     }
 }
