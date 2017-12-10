@@ -20,7 +20,7 @@ public class TimedStorageTest
    */
   public TimedStorageTest( String testName )
   {
-    super( "testStorage" );
+    super( testName );
   }
 
   /**

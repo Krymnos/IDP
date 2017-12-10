@@ -6,43 +6,25 @@ import de.idp.pipeline.PipelineInterfaces.Grid_data;
 import de.idp.pipeline.PipelineInterfaces.measurement_message;
 import de.idp.pipeline.PipelineInterfaces.reply;
 import de.idp.pipeline.gatewayGrpc.gatewayImplBase;
-import io.grpc.Server;
-import io.grpc.ServerBuilder;
-import io.grpc.Status;
-import io.grpc.stub.ServerCallStreamObserver;
+import de.idp.pipeline.storage.TimedAggregationStorage;
+import io.grpc.*;
 import io.grpc.stub.StreamObserver;
+
 import java.io.IOException;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
-import io.grpc.stub.ClientCallStreamObserver;
-import io.grpc.stub.ClientResponseObserver;
+import java.util.ArrayList;
+import java.util.DoubleSummaryStatistics;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
-
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class PipelineComponent {
 	
 	private static final Logger logger = Logger.getLogger(PipelineComponent.class.getName());
 	
-	private static Grid_data newGridData(String meterId, String metricId, long timestamp, double value) {
+	public static Grid_data newGridData(String meterId, String metricId, long timestamp, double value) {
 		return Grid_data.newBuilder().setMeasurement(measurement_message.newBuilder().setMeterId(meterId).setMetricId(metricId).setTimestamp(timestamp).setValue(value).build()).build();	
-	}
-	
-	// test function to create testmessages to be sent by test client
-	private static List<Grid_data>createDummyTestMessages (int numMessages) {
-		List<Grid_data> gDataList = new ArrayList<Grid_data>() ;
-		
-		for (int i = 0; i< numMessages; i++) {
-			gDataList.add(newGridData("meter"+i, "metric"+i, i, i+1));
-		}
-		return gDataList;
 	}
 	
 	
@@ -51,8 +33,6 @@ public class PipelineComponent {
         JCommander comm = JCommander.newBuilder()
                 .addObject(args)
                 .build();
-        List<Grid_data> testMessages = createDummyTestMessages(10);
-        logger.info(testMessages.toString());
         comm.parse(argv);
 
         if(args.help){
@@ -93,17 +73,16 @@ class gatewayServer {
 	private final Server server;
 	private final int portNext;
 	private final String hostNext;
-	private final int aggregationTime;
-	
-	
+	static TimedAggregationStorage<measurement_message> aggregationStorage;
+
 	public gatewayServer(int port, int portNext, String hostNext, int aggregationTime) throws IOException{
 	    this.port = port;
 	    this.portNext = portNext;
 	    this.hostNext = hostNext;
-	    this.aggregationTime = aggregationTime;
+
 	    server = ServerBuilder.forPort(port).addService(new pushDataService(hostNext, portNext, aggregationTime)).build();
-	    
 	}
+
 	public void start() throws IOException{
 		server.start();
 		logger.info("Server started and is listening on " + server.getPort());
@@ -133,11 +112,20 @@ class gatewayServer {
 		private final int portNext;
 		private final String hostNext;
 		private final int aggregationTime;
-		
+
+
 		public pushDataService(String hostNext, int portNext, int aggregationTime) {
 			this.portNext = portNext;
 		    this.hostNext = hostNext;
 		    this.aggregationTime = aggregationTime;
+
+		     if(aggregationTime > 0) {
+				 aggregationStorage = new TimedAggregationStorage<measurement_message>(aggregationTime, TimeUnit.MINUTES.toSeconds(1)) {
+					 @Override public DoubleSummaryStatistics aggregate(List<measurement_message> items) {
+						 return items.stream().mapToDouble(measurement_message::getValue).summaryStatistics();
+					 }
+				 };
+			 }
 		}
 
 		@Override
@@ -154,13 +142,17 @@ class gatewayServer {
 			          String message = request.toString();
 			          logger.info("Request: " + message);
 			          gDataList.add(request);
-		              
+			          if(aggregationTime > 0){
+						aggregationStorage.put(request.getMeasurement());
+					  }
+
 		            } catch (Throwable throwable) {
 		              throwable.printStackTrace();
 		              responseObserver.onError(
 		                  Status.UNKNOWN.withDescription("Error handling request").withCause(throwable).asException());
 		            }
-			      }          		
+			      }
+
 				 @Override
 		          public void onError(Throwable t) {
 		            // End the response stream if the client presents an error.
@@ -171,8 +163,18 @@ class gatewayServer {
 		          @Override
 		          public void onCompleted() {
 		            // Signal the end of work when the client ends the request stream.
-		        	String response_content = "200";
-		            logger.info("Response: " + response_content);
+					  String response_content = "200";
+					  logger.info("Response: " + response_content);
+
+                      //iam an endpoint
+					  if(hostNext == null || portNext < 0){
+		        		reply response = reply.newBuilder().setResponseCode(response_content).build();
+						responseObserver.onNext(response);
+						logger.info("COMPLETED");
+
+						responseObserver.onCompleted();
+		        		return;
+					}
 		            gatewayClient client = new gatewayClient(hostNext, portNext);
 		            try {
 						client.pushData(gDataList);	
@@ -272,11 +274,11 @@ class Args {
                                                              + " node is an endpoint.")
     public String host_next;
 
-    @Parameter(names = {"-agg", "--aggregate"}, description = "aggregate message values (min, max, avg) of the last n"
+    @Parameter(names = {"-agg", "--aggregationTime"}, description = "aggregate message values (min, max, avg) of the last n"
                                                             + " seconds. If this is not set then no aggregation takes place.")
     public Integer aggregationTime;
 
-    @Parameter(names = {"-st", "--storagetime"}, description = "specify the storagetime of messages (in seconds)")
+    @Parameter(names = {"-st", "--storagetime"}, description = "specify the storagetime of messages / aggregation (in seconds)")
     public Integer storageTime;
 
     @Parameter(names = "--help", description = "prints this help", help = true)

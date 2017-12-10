@@ -20,7 +20,9 @@ public class TimedStorage<T>{
     return (T) storage.take().getData();
   }
 
+  public DelayQueue<TimedStorageItem> getStorage(){return storage;}
+
   public void add(T data){
-    this.storage.add(new TimedStorageItem<T>(data, storageTime_ms));
+    this.storage.add(new TimedStorageItem<>(data, storageTime_ms));
   }
 }
