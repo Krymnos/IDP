@@ -7,7 +7,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public abstract class TimedAggregationStorage<T>{
-    private long aggregationInterval;
+    private long aggregationInterval_s;
     List<T> items;
     TimedStorage<DoubleSummaryStatistics> aggregations;
 
@@ -15,8 +15,8 @@ public abstract class TimedAggregationStorage<T>{
     private Thread storageCleanerThread;
 
 
-    public TimedAggregationStorage(long aggregationInterval, long storageTime_s) {
-        this.aggregationInterval = aggregationInterval;
+    public TimedAggregationStorage(long aggregationInterval_s, long storageTime_s) {
+        this.aggregationInterval_s = aggregationInterval_s;
         this.aggregations = new TimedStorage<>(storageTime_s, TimeUnit.SECONDS);
         items = new ArrayList<>();
         start();
@@ -33,7 +33,7 @@ public abstract class TimedAggregationStorage<T>{
                 }
 
                 try {
-                    Thread.sleep(aggregationInterval);
+                    Thread.sleep(aggregationInterval_s);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

@@ -75,12 +75,12 @@ class gatewayServer {
 	private final String hostNext;
 	static TimedAggregationStorage<measurement_message> aggregationStorage;
 
-	public gatewayServer(int port, int portNext, String hostNext, int aggregationTime, int storagetime_m) throws IOException{
+	public gatewayServer(int port, int portNext, String hostNext, int aggregationTime_s, int storagetime_m) throws IOException{
 	    this.port = port;
 	    this.portNext = portNext;
 	    this.hostNext = hostNext;
 
-	    server = ServerBuilder.forPort(port).addService(new pushDataService(hostNext, portNext, aggregationTime, storagetime_m)).build();
+	    server = ServerBuilder.forPort(port).addService(new pushDataService(hostNext, portNext, aggregationTime_s, storagetime_m)).build();
 	}
 
 	public void start() throws IOException{
@@ -111,16 +111,16 @@ class gatewayServer {
 		private static final Logger logger = Logger.getLogger(PipelineComponent.class.getName());
 		private final int portNext;
 		private final String hostNext;
-		private final int aggregationTime;
+		private final int aggregationTime_s;
 
 
-		public pushDataService(String hostNext, int portNext, int aggregationTime, int storagetime_m) {
+		public pushDataService(String hostNext, int portNext, int aggregationTime_s, int storagetime_m) {
 			this.portNext = portNext;
 		    this.hostNext = hostNext;
-		    this.aggregationTime = aggregationTime;
+		    this.aggregationTime_s = aggregationTime_s;
 
-		     if(aggregationTime > 0) {
-				 aggregationStorage = new TimedAggregationStorage<measurement_message>(aggregationTime, TimeUnit.MINUTES.toSeconds(storagetime_m)) {
+		     if(aggregationTime_s > 0) {
+				 aggregationStorage = new TimedAggregationStorage<measurement_message>(aggregationTime_s, TimeUnit.MINUTES.toSeconds(storagetime_m)) {
 					 @Override public DoubleSummaryStatistics aggregate(List<measurement_message> items) {
 						 return items.stream().mapToDouble(measurement_message::getValue).summaryStatistics();
 					 }
@@ -142,7 +142,8 @@ class gatewayServer {
 			          String message = request.toString();
 			          logger.info("Request: " + message);
 			          gDataList.add(request);
-			          if(aggregationTime > 0){
+
+			          if(aggregationTime_s > 0){
 						aggregationStorage.put(request.getMeasurement());
 					  }
 
