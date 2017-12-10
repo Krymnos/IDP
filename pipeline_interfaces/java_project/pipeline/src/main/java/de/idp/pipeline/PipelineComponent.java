@@ -42,9 +42,9 @@ public class PipelineComponent {
         
         System.out.println(args.toString());
         // Start server with args.port or default port
-        if(args.port == null || args.port_next == null || args.host_next == null || args.aggregationTime == null) {
+        if(args.port == null || args.port_next == null || args.host_next == null || args.aggregationTime == null || args.storageTime == null) {
         	// use default values if a parameter is not set
-        	gatewayServer server = new gatewayServer(50051, 50052, "localhost", 10);
+        	gatewayServer server = new gatewayServer(50051, 50052, "localhost", 10, 5);
         	server.start();
         	server.blockUntilShutdown();
         	
@@ -54,7 +54,7 @@ public class PipelineComponent {
         	 
         } else {
         	// implement pipeline topology and config parameters
-        	gatewayServer server = new gatewayServer(args.port, args.port_next, args.host_next, args.aggregationTime);
+        	gatewayServer server = new gatewayServer(args.port, args.port_next, args.host_next, args.aggregationTime, args.storageTime);
         	server.start();
         	server.blockUntilShutdown();
         	
@@ -75,12 +75,12 @@ class gatewayServer {
 	private final String hostNext;
 	static TimedAggregationStorage<measurement_message> aggregationStorage;
 
-	public gatewayServer(int port, int portNext, String hostNext, int aggregationTime) throws IOException{
+	public gatewayServer(int port, int portNext, String hostNext, int aggregationTime, int storagetime_m) throws IOException{
 	    this.port = port;
 	    this.portNext = portNext;
 	    this.hostNext = hostNext;
 
-	    server = ServerBuilder.forPort(port).addService(new pushDataService(hostNext, portNext, aggregationTime)).build();
+	    server = ServerBuilder.forPort(port).addService(new pushDataService(hostNext, portNext, aggregationTime, storagetime_m)).build();
 	}
 
 	public void start() throws IOException{
@@ -114,13 +114,13 @@ class gatewayServer {
 		private final int aggregationTime;
 
 
-		public pushDataService(String hostNext, int portNext, int aggregationTime) {
+		public pushDataService(String hostNext, int portNext, int aggregationTime, int storagetime_m) {
 			this.portNext = portNext;
 		    this.hostNext = hostNext;
 		    this.aggregationTime = aggregationTime;
 
 		     if(aggregationTime > 0) {
-				 aggregationStorage = new TimedAggregationStorage<measurement_message>(aggregationTime, TimeUnit.MINUTES.toSeconds(1)) {
+				 aggregationStorage = new TimedAggregationStorage<measurement_message>(aggregationTime, TimeUnit.MINUTES.toSeconds(storagetime_m)) {
 					 @Override public DoubleSummaryStatistics aggregate(List<measurement_message> items) {
 						 return items.stream().mapToDouble(measurement_message::getValue).summaryStatistics();
 					 }

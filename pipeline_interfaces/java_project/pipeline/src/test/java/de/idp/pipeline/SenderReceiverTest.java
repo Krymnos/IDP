@@ -38,10 +38,10 @@ public class SenderReceiverTest extends TestCase
   public void test_1() throws IOException, InterruptedException {
     //Client test
 
-    gatewayServer gateway_1 = new gatewayServer(50051, 50052, "localhost", -1);
+    gatewayServer gateway_1 = new gatewayServer(50051, 50052, "localhost", -1, -1);
     gateway_1.start();
 
-    gatewayServer endpoint = new gatewayServer(50052, -1, null, 1);
+    gatewayServer endpoint = new gatewayServer(50052, -1, null, 1, 1);
     endpoint.start();
 
     gatewayClient client = new gatewayClient("localhost", 50051);
