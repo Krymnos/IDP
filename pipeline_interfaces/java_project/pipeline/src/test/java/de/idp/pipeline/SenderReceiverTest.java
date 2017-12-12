@@ -46,6 +46,7 @@ public class SenderReceiverTest extends TestCase
     gateway_1.start();
 
     gatewayServer endpoint = new gatewayServer(50052, -1, null, 1, 1);
+    endpoint.setVerbose(true);
     endpoint.start();
 
     gatewayClient client = new gatewayClient("localhost", 50051);
