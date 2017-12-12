@@ -10,6 +10,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import io.provenance.ProvenanceContext;
+import io.provenance.exception.ConfigParseException;
+
 import static de.idp.pipeline.PipelineComponent.newGridData;
 
 public class SenderReceiverTest extends TestCase
@@ -34,10 +37,11 @@ public class SenderReceiverTest extends TestCase
 
   /**
    * Rigourous Test :-)
+ * @throws ConfigParseException 
    */
-  public void test_1() throws IOException, InterruptedException {
+  public void test_1() throws IOException, InterruptedException, ConfigParseException {
     //Client test
-
+	ProvenanceContext pc =ProvenanceContext.getOrCreate();
     gatewayServer gateway_1 = new gatewayServer(50051, 50052, "localhost", -1, -1);
     gateway_1.start();
 

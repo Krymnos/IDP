@@ -9,9 +9,16 @@ import de.idp.pipeline.gatewayGrpc.gatewayImplBase;
 import de.idp.pipeline.storage.TimedAggregationStorage;
 import io.grpc.*;
 import io.grpc.stub.StreamObserver;
+import io.provenance.ProvenanceContext;
+import io.provenance.exception.ConfigParseException;
+import io.provenance.types.Context;
+import io.provenance.types.ContextBuilder;
+import io.provenance.types.Datapoint;
+import io.provenance.types.Location;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.DoubleSummaryStatistics;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -28,7 +35,7 @@ public class PipelineComponent {
 	}
 	
 	
-	public static void main(String[] argv) throws IOException, InterruptedException{
+	public static void main(String[] argv) throws IOException, InterruptedException, ConfigParseException{
         Args args = new Args();
         JCommander comm = JCommander.newBuilder()
                 .addObject(args)
@@ -73,13 +80,15 @@ class gatewayServer {
 	private final Server server;
 	private final int portNext;
 	private final String hostNext;
+	public static String className;
+	
 	static TimedAggregationStorage<measurement_message> aggregationStorage;
 
-	public gatewayServer(int port, int portNext, String hostNext, int aggregationTime_s, int storagetime_m) throws IOException{
+	public gatewayServer(int port, int portNext, String hostNext, int aggregationTime_s, int storagetime_m) throws IOException, ConfigParseException{
 	    this.port = port;
 	    this.portNext = portNext;
 	    this.hostNext = hostNext;
-
+	    className = this.getClass().getSimpleName();
 	    server = ServerBuilder.forPort(port).addService(new pushDataService(hostNext, portNext, aggregationTime_s, storagetime_m)).build();
 	}
 
@@ -112,13 +121,17 @@ class gatewayServer {
 		private final int portNext;
 		private final String hostNext;
 		private final int aggregationTime_s;
-
-
-		public pushDataService(String hostNext, int portNext, int aggregationTime_s, int storagetime_m) {
+		private final String appName;
+		private final ProvenanceContext pc;
+		
+		public pushDataService(String hostNext, int portNext, int aggregationTime_s, int storagetime_m) throws ConfigParseException {
 			this.portNext = portNext;
 		    this.hostNext = hostNext;
 		    this.aggregationTime_s = aggregationTime_s;
-
+		    
+		    pc = ProvenanceContext.getOrCreate();
+		    appName = this.getClass().getSimpleName() ;
+		    
 		     if(aggregationTime_s > 0) {
 				 aggregationStorage = new TimedAggregationStorage<measurement_message>(aggregationTime_s, TimeUnit.MINUTES.toSeconds(storagetime_m)) {
 					 @Override public DoubleSummaryStatistics aggregate(List<measurement_message> items) {
@@ -132,7 +145,7 @@ class gatewayServer {
 		public StreamObserver<Grid_data> pushData(final StreamObserver<reply> responseObserver){
 			return new StreamObserver<Grid_data>() {
 				List<Grid_data> gDataList = new ArrayList<Grid_data>();
-				
+				List<Context> provContextList = new ArrayList<Context>();
 				// add each request message to gDataList
 				@Override
 				public void onNext(Grid_data request) {
@@ -141,6 +154,18 @@ class gatewayServer {
 			          // Accept and enqueue the request.
 			          String message = request.toString();
 			          logger.info("Request: " + message);
+			          ContextBuilder cBuilder = new ContextBuilder();
+			          Context context = cBuilder.build();
+			          context.setAppName(appName);
+			          context.setClassName(className);
+			          context.setReceiveTime(new Date());
+			          // for now loc is just gateway for every hop lets think of sth later
+			          context.setLoc(new Location("gateway"));
+			          context.setLineNo((long) 185);
+			          context.setTimestamp(new Date((long)request.getMeasurement().getTimestamp()));
+			          System.out.println(context.toString());
+			          provContextList.add(context);
+			          
 			          gDataList.add(request);
 
 			          if(aggregationTime_s > 0){
@@ -169,21 +194,47 @@ class gatewayServer {
 
                       //iam an endpoint
 					  if(hostNext == null || portNext < 0){
-		        		reply response = reply.newBuilder().setResponseCode(response_content).build();
+						  Date sendTime;
+						  sendTime = new Date();
+				          Datapoint[] dpList = new Datapoint[provContextList.size()];
+				          for (int i=0; i < gDataList.size(); i++) {
+					          provContextList.get(i).setSendTime(sendTime);
+					          dpList[i] = new Datapoint(provContextList.get(i));
+					            	
+					      }
+				          String[] provIds = new String[dpList.length];
+				          provIds = pc.save(dpList);
+						  
+						reply response = reply.newBuilder().setResponseCode(response_content).build();
 						responseObserver.onNext(response);
 						logger.info("COMPLETED");
-
+						
 						responseObserver.onCompleted();
 		        		return;
 					}
-		            gatewayClient client = new gatewayClient(hostNext, portNext);
-		            try {
-						client.pushData(gDataList);	
-					} catch (InterruptedException e) {
+					  Date sendTime;
+					  gatewayClient client = new gatewayClient(hostNext, portNext);
+					  try {
+						sendTime = new Date();
+			            Datapoint[] dpList = new Datapoint[provContextList.size()];
+			            for (int i=0; i < gDataList.size(); i++) {
+				            provContextList.get(i).setSendTime(sendTime);
+				            dpList[i] = new Datapoint(provContextList.get(i));
+				            	
+				            }
+			            String[] provIds = new String[dpList.length];
+			            provIds = pc.save(dpList);
+			            for(int i=0; i<provIds.length; i++) {
+			            	Grid_data message = gDataList.get(i);
+			            	Grid_data newMessage = Grid_data.newBuilder().setMeasurement(message.getMeasurement()).setProvId(provIds[i]).build();
+			            	gDataList.set(i, newMessage);	
+						client.pushData(gDataList);	 
+						}
+					  } catch (InterruptedException e) {
 						 //TODO Auto-generated catch block
 						e.printStackTrace();
-					} finally {
-						try {
+					  } finally {
+						  try {
 							client.shutdown();
 						} catch (InterruptedException e) {
 							// TODO Auto-generated catch block
