@@ -40,40 +40,32 @@ public class PipelineComponent {
         }
         
         System.out.println(args.toString());
-        // Start server with args.port or default port
-        if(args.port == null || args.port_next == null || args.host_next == null || args.aggregationTime == null || args.storageTime == null) {
-        	// use default values if a parameter is not set
-        	gatewayServer server = new gatewayServer(50051, 50052, "localhost", 10, 5);
-        	server.setVerbose(args.verbose);
-        	server.start();
-        	server.blockUntilShutdown();
-        	
-        	// Client test
-        	//gatewayClient client = new gatewayClient("localhost", 50052);
-        	//client.pushData(testMessages);
-        	 
-        } else {
-        	// implement pipeline topology and config parameters
-        	gatewayServer server = new gatewayServer(args.port, args.port_next, args.host_next, args.aggregationTime, args.storageTime);
-			server.setVerbose(args.verbose);
-        	server.start();
-        	server.blockUntilShutdown();
-        	
-        	//Client test
-        	//gatewayClient client = new gatewayClient("localhost", 50052);
-        	//client.pushData(testMessages);
-        }
+
+		gatewayServer server = null;
+		if(args.host_next == null){ //endpoint
+			server = new gatewayServer(args.port);
+		}else {
+			int aggregationtime = args.aggregationTime == null ? -1 : args.aggregationTime;
+			int storagetime = args.storageTime == null ? -1 : args.storageTime;
+			server = new gatewayServer(args.port, args.port_next, args.host_next, aggregationtime, storagetime);
+		}
+
+		server.setVerbose(args.verbose);
+		server.start();
+		server.blockUntilShutdown();
     }
 
 }
+
+
 // class for server implementation
 class gatewayServer {
 	private static final Logger logger = Logger.getLogger(gatewayServer.class.getName());
 
-	private final int port;
+	private int port;
 	private final Server server;
 	private final int portNext;
-	private final String hostNext;
+	private String hostNext;
 	static TimedAggregationStorage<measurement_message> aggregationStorage;
 
 	gatewayServer.pushDataService pushDataService;
@@ -84,6 +76,13 @@ class gatewayServer {
 
 	    this.pushDataService = new pushDataService(hostNext, portNext, aggregationTime_s, storagetime_m);
 	    server = ServerBuilder.forPort(port).addService(pushDataService).build();
+	}
+
+	//TODO: implement an endpoint class
+	public gatewayServer(int port){
+		this.portNext = -1;
+		this.pushDataService = new pushDataService(null, portNext, -1, -1);
+		server = ServerBuilder.forPort(port).addService(pushDataService).build();
 	}
 
 	public void setVerbose(boolean verbose){
@@ -151,10 +150,10 @@ class gatewayServer {
 			        try {
 			          // Accept and enqueue the request.
 			          String message = request.toString();
-			          logger.info("Request: " + message);
 			          gDataList.add(request);
 
-			          if(verbose){
+			          logger.info("Request: " + message);
+					  if(verbose){
 						  System.out.println("got message: " + request.toString());
 					  }
 

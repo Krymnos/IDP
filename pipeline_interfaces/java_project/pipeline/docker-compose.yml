@@ -1,0 +1,17 @@
+version: '3'
+services:
+    source:
+        image: sensor:latest
+        command: ./smemu -sourceFolder data/20170210 -targetAddress gateway:5050 -targetType grpc-pipeline
+        depends_on:
+            - gateway
+    gateway:
+        image: pipeline_java:latest
+        environment:
+            - "ARGUMENTS=--port 5050 --host_next endpoint --port_next 5050"
+        depends_on:
+            - endpoint
+    endpoint:
+        image: pipeline_java:latest
+        environment:
+            - "ARGUMENTS=--port 5050 --verbose"
