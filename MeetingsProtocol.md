@@ -144,5 +144,45 @@
  - implement a provenance process that collects data based on the configuration file and writes it to the db (Mukrram)
  - hardcode template for GUI (Ron)
  
+ ## Meeting 11.12. 
+ present Members: Mukrram, Gerrit, Ron, Darshan, Talal
+ 
+ ### Agenda
+ - compare individual slides
+ - discuss who presents what
+ 
+ Result: 
+ - individual parts not yet ready
+ - Mukrram and Ron present
+ 
+ ### Tasks
+ - contribute individual slides
+ - meet tuesday evening/wednesday morning for pitch practise
+ 
+ 
+ ## Meeting 18.12
+ present: Kevin, Talal, Darshan, Ron, Gerrit
+ 
+ ### Agenda
+ - discuss feedback from presentation
+ - should we go for Scrum, i.e. weekly based deadlines of tasks?
+ - How to measure individual contributions?
+ - future tasks in each part
+ 
+ #### from feedback
+ - many questions were about the boundaries of our current work
+ 
+ #### Scrum
+ - all agree that weekly deadlines are good
+ - issues can be created over the week but all new ones need to be discussed on monday
+ 
+ #### Measuring contributions
+ - duplicate issues need to be avoided
+ - referencing of issues in commits is important
+ - note spent time on closed issues
+ 
+ 
+ 
+ 
  
  
