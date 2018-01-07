@@ -222,8 +222,9 @@ class gatewayServer {
 					          dpList[i] = new Datapoint(provContextList.get(i));
 					            	
 					      }
-				          String[] provIds = new String[dpList.length];
-				          provIds = pc.save(dpList);
+				          // uncomment following lines if DB is ready for provenance API
+				          //String[] provIds = new String[dpList.length];
+				          //provIds = pc.save(dpList);
 						  
 						reply response = reply.newBuilder().setResponseCode(response_content).build();
 						responseObserver.onNext(response);
@@ -242,14 +243,17 @@ class gatewayServer {
 				            dpList[i] = new Datapoint(provContextList.get(i));
 				            	
 				            }
+			            // uncomment following lines if DB is ready for provenance API
+			            /*
 			            String[] provIds = new String[dpList.length];
+			           
 			            provIds = pc.save(dpList);
 			            for(int i=0; i<provIds.length; i++) {
 			            	Grid_data message = gDataList.get(i);
 			            	Grid_data newMessage = Grid_data.newBuilder().setMeasurement(message.getMeasurement()).setProvId(provIds[i]).build();
-			            	gDataList.set(i, newMessage);	
+			            	gDataList.set(i, newMessage);	}*/
 						client.pushData(gDataList);	 
-						}
+						
 					  } catch (InterruptedException e) {
 						 //TODO Auto-generated catch block
 						e.printStackTrace();
