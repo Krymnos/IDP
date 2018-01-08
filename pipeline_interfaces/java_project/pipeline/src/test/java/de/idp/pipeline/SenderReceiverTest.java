@@ -1,17 +1,16 @@
 package de.idp.pipeline;
 
+import de.idp.pipeline.util.SystemHelper;
+import io.provenance.ProvenanceContext;
+import io.provenance.exception.ConfigParseException;
 import junit.framework.Assert;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
-import io.provenance.ProvenanceContext;
-import io.provenance.exception.ConfigParseException;
 
 import static de.idp.pipeline.PipelineComponent.newGridData;
 
@@ -39,7 +38,9 @@ public class SenderReceiverTest extends TestCase
    * Rigourous Test :-)
  * @throws ConfigParseException 
    */
-  public void test_1() throws IOException, InterruptedException, ConfigParseException {
+  public void test_1() throws Exception {
+    SystemHelper.setUpEnvironment();
+    
     //Client test
 	ProvenanceContext pc =ProvenanceContext.getOrCreate();
     gatewayServer gateway_1 = new gatewayServer(50051, 50052, "localhost", -1, -1);

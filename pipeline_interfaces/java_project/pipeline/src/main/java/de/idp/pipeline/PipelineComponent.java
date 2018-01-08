@@ -7,7 +7,12 @@ import de.idp.pipeline.PipelineInterfaces.measurement_message;
 import de.idp.pipeline.PipelineInterfaces.reply;
 import de.idp.pipeline.gatewayGrpc.gatewayImplBase;
 import de.idp.pipeline.storage.TimedAggregationStorage;
-import io.grpc.*;
+import de.idp.pipeline.util.SystemHelper;
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
+import io.grpc.Server;
+import io.grpc.ServerBuilder;
+import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import io.provenance.ProvenanceContext;
 import io.provenance.exception.ConfigParseException;
@@ -34,7 +39,8 @@ public class PipelineComponent {
 	}
 	
 	
-	public static void main(String[] argv) throws IOException, InterruptedException, ConfigParseException{
+	public static void main(String[] argv) throws Exception {
+		SystemHelper.setUpEnvironment();
         Args args = new Args();
         JCommander comm = JCommander.newBuilder()
                 .addObject(args)
