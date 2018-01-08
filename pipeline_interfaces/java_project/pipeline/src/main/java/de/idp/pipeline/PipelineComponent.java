@@ -179,7 +179,13 @@ class gatewayServer {
 			          context.setLoc(new Location("gateway"));
 			          context.setLineNo((long) 185);
 			          context.setTimestamp(new Date((long)request.getMeasurement().getTimestamp()));
-			          System.out.println(context.toString());
+			          logger.info("Appname: " + context.getAppName());
+			          logger.info("Class name: " + context.getClassName());
+			          logger.info("Receive Time: " + context.getReceiveTime());
+			          logger.info("location: " + context.getLoc().getLable());
+			          logger.info("Line no: " + context.getLineNo());
+			          logger.info("timestamp: " + context.getTimestamp());
+
 			          provContextList.add(context);
 			          
 			          gDataList.add(request);
@@ -216,6 +222,7 @@ class gatewayServer {
 					  if(hostNext == null || portNext < 0){
 						  Date sendTime;
 						  sendTime = new Date();
+						  logger.info("send time: " + sendTime);
 				          Datapoint[] dpList = new Datapoint[provContextList.size()];
 				          for (int i=0; i < gDataList.size(); i++) {
 					          provContextList.get(i).setSendTime(sendTime);
