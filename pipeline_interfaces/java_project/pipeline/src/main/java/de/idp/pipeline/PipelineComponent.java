@@ -30,6 +30,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import io.lettuce.core.*;
+import io.lettuce.core.api.StatefulRedisConnection;
+import io.lettuce.core.api.sync.RedisCommands;
 
 public class PipelineComponent {
 	
@@ -88,6 +91,9 @@ class gatewayServer {
 	private final int portNext;
 	private final String hostNext;
 	public static String className;
+	public static RedisClient dbClient;
+	public static StatefulRedisConnection<String, String> dbConnection;
+	
 	
 	static TimedAggregationStorage<measurement_message> aggregationStorage;
 	gatewayServer.pushDataService pushDataService;
@@ -97,7 +103,12 @@ class gatewayServer {
 	    this.portNext = portNext;
 	    this.hostNext = hostNext;
 	    className = this.getClass().getSimpleName();
+	    dbClient = RedisClient.create("redis://localhost:6379");
+	    dbConnection = dbClient.connect();
 	    this.pushDataService = new pushDataService(hostNext, portNext, aggregationTime_s, storagetime_m);
+	  
+
+
 	    server = ServerBuilder.forPort(port).addService(pushDataService).build();
 	}
 
@@ -115,6 +126,8 @@ class gatewayServer {
 		        System.err.println("*** shutting down gRPC server since JVM is shutting down");
 		        gatewayServer.this.stop();
 		        System.err.println("*** server shut down");
+			    dbConnection.close();
+				dbClient.shutdown();
 		      }
 		});
 	}
@@ -122,11 +135,19 @@ class gatewayServer {
 	    if (server != null) {
 	      server.shutdown();
 	    }
+	    if (dbConnection != null) {
+	    	dbConnection.close();
+	    	dbClient.shutdown();
+	    }
 	}
 	
 	public void blockUntilShutdown() throws InterruptedException {
 	    if (server != null) {
 	      server.awaitTermination();
+	    }
+	    if (dbConnection != null) {
+	    	dbConnection.close();
+	    	dbClient.shutdown();
 	    }
 	}
 	// implement push data service
@@ -137,15 +158,21 @@ class gatewayServer {
 		private final int aggregationTime_s;
 		private final String appName;
 		private final ProvenanceContext pc;
+		private RedisCommands<String, String> syncCommands;
 		private boolean verbose;
+		
 		public pushDataService(String hostNext, int portNext, int aggregationTime_s, int storagetime_m) throws ConfigParseException {
 
+			
 
-
-		
+			
 			this.portNext = portNext;
 		    this.hostNext = hostNext;
 		    this.aggregationTime_s = aggregationTime_s;
+		    
+		    //local storage client init
+		    
+		    syncCommands = dbConnection.sync();
 		    
 		    pc = ProvenanceContext.getOrCreate();
 		    appName = this.getClass().getSimpleName() ;
@@ -173,8 +200,27 @@ class gatewayServer {
 				public void onNext(Grid_data request) {
 			        // Process the request and send a response or an error.
 			        try {
+			         
 			          // Accept and enqueue the request.
 			          String message = request.toString();
+			          
+			          // Save every parameter for easy handling and local saving
+			          String meterID = request.getMeasurement().getMeterId();
+			          long timestamp = request.getMeasurement().getTimestamp();
+			          String metricID = request.getMeasurement().getMetricId();
+			          String value = String.valueOf(request.getMeasurement().getValue());
+			          String provID = request.getProvId();
+			          String key = meterID + String.valueOf(timestamp);
+			          
+			          logger.info("key: " + key);
+			          logger.info("prov id: " + provID);
+			          syncCommands.hset(key, "metricID", metricID);
+			          syncCommands.hset(key, "value", "" + value);
+			          if (request.getProvId() != "") {
+			        	  syncCommands.hset(key, "ProvID", provID);
+			          }
+			          logger.info("db entry pushed: " + syncCommands.hgetall(key).toString());
+			          
 			          logger.info("Request: " + message);
 			          ContextBuilder cBuilder = new ContextBuilder();
 			          Context context = cBuilder.build();
@@ -185,13 +231,15 @@ class gatewayServer {
 			          context.setLoc(new Location("gateway"));
 			          context.setLineNo((long) 185);
 			          context.setTimestamp(new Date((long)request.getMeasurement().getTimestamp()));
+			          
+			          /* uncomment for prov API arguments output
 			          logger.info("Appname: " + context.getAppName());
 			          logger.info("Class name: " + context.getClassName());
 			          logger.info("Receive Time: " + context.getReceiveTime());
 			          logger.info("location: " + context.getLoc().getLable());
 			          logger.info("Line no: " + context.getLineNo());
 			          logger.info("timestamp: " + context.getTimestamp());
-
+					*/
 			          provContextList.add(context);
 			          
 			          gDataList.add(request);

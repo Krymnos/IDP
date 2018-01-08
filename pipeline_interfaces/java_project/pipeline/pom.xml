@@ -68,6 +68,11 @@
   	</dependencyManagement>
 	<dependencies>
 		<dependency>
+		    <groupId>io.lettuce</groupId>
+		    <artifactId>lettuce-core</artifactId>
+		    <version>5.0.0.RELEASE</version>
+		</dependency>
+		<dependency>
 			<groupId>io.provenance</groupId>
 			<artifactId>provenance-api</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
