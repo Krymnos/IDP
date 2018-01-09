@@ -1,6 +1,8 @@
 # IDP
 University project
 
+# Build States
+* branch pipeline: [![Build Status](https://travis-ci.org/Krymnos/IDP.svg?branch=pipeline)](https://travis-ci.org/Krymnos/IDP) 
 
 # Pipeline
 
