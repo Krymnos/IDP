@@ -2,16 +2,16 @@ version: '3'
 services:
     source:
         image: sensor:latest
-        command: ./smemu -sourceFolder data/20170210 -targetAddress gateway:5050 -targetType grpc-pipeline
         depends_on:
             - gateway
+        command: ["./wait-for-it.sh", "gateway:50051", "--", "./smemu", "-sourceFolder", "data/20170210", "-targetAddress", "gateway:50051" , "-targetType", "grpc-pipeline"]
     gateway:
-        image: pipeline_java:latest
-        environment:
-            - "ARGUMENTS=--port 5050 --host_next endpoint --port_next 5050"
-        depends_on:
+       image: pipeline_java:latest
+       environment:
+            - "ARGUMENTS=--port 50051 --host_next endpoint --port_next 50051"
+       depends_on:
             - endpoint
     endpoint:
-        image: pipeline_java:latest
-        environment:
-            - "ARGUMENTS=--port 5050 --verbose"
+       image: pipeline_java:latest
+       environment:
+           - "ARGUMENTS=--port 50051 --verbose"
