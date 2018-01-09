@@ -7,11 +7,26 @@ import de.idp.pipeline.PipelineInterfaces.measurement_message;
 import de.idp.pipeline.PipelineInterfaces.reply;
 import de.idp.pipeline.gatewayGrpc.gatewayImplBase;
 import de.idp.pipeline.storage.TimedAggregationStorage;
-import io.grpc.*;
+import de.idp.pipeline.util.SystemHelper;
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
+import io.grpc.Server;
+import io.grpc.ServerBuilder;
+import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
+import io.lettuce.core.RedisClient;
+import io.lettuce.core.api.StatefulRedisConnection;
+import io.lettuce.core.api.sync.RedisCommands;
+import io.provenance.ProvenanceContext;
+import io.provenance.exception.ConfigParseException;
+import io.provenance.types.Context;
+import io.provenance.types.ContextBuilder;
+import io.provenance.types.Datapoint;
+import io.provenance.types.Location;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.DoubleSummaryStatistics;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -27,8 +42,9 @@ public class PipelineComponent {
 	}
 	
 	
-	public static void main(String[] argv) throws IOException, InterruptedException{
-		Args args = new Args();
+	public static void main(String[] argv) throws Exception {
+		SystemHelper.setUpEnvironment();
+        Args args = new Args();
         JCommander comm = JCommander.newBuilder()
                 .addObject(args)
                 .build();
@@ -40,53 +56,65 @@ public class PipelineComponent {
         }
         
         System.out.println(args.toString());
-
-		gatewayServer server = null;
-		if(args.host_next == null){ //endpoint
-			server = new gatewayServer(args.port);
-		}else {
-			int aggregationtime = args.aggregationTime == null ? -1 : args.aggregationTime;
-			int storagetime = args.storageTime == null ? -1 : args.storageTime;
-			server = new gatewayServer(args.port, args.port_next, args.host_next, aggregationtime, storagetime);
-		}
-
-		server.setVerbose(args.verbose);
-		server.start();
-		server.blockUntilShutdown();
+        // Start server with args.port or default port
+        if(args.port == null || args.port_next == null || args.host_next == null || args.aggregationTime == null || args.storageTime == null) {
+        	// use default values if a parameter is not set
+        	gatewayServer server = new gatewayServer(50051, 50052, "localhost", 10, 5);
+        	server.setVerbose(args.verbose);
+        	server.start();
+        	server.blockUntilShutdown();
+        	
+        	// Client test
+        	//gatewayClient client = new gatewayClient("localhost", 50052);
+        	//client.pushData(testMessages);
+        	 
+        } else {
+        	// implement pipeline topology and config parameters
+        	gatewayServer server = new gatewayServer(args.port, args.port_next, args.host_next, args.aggregationTime, args.storageTime);
+			server.setVerbose(args.verbose);
+        	server.start();
+        	server.blockUntilShutdown();
+        	
+        	//Client test
+        	//gatewayClient client = new gatewayClient("localhost", 50052);
+        	//client.pushData(testMessages);
+        }
     }
 
 }
-
-
 // class for server implementation
 class gatewayServer {
 	private static final Logger logger = Logger.getLogger(gatewayServer.class.getName());
 
-	private int port;
+	private final int port;
 	private final Server server;
 	private final int portNext;
-	private String hostNext;
+	private final String hostNext;
+	public static String className;
+	public static RedisClient dbClient;
+	public static StatefulRedisConnection<String, String> dbConnection;
+	
+	
 	static TimedAggregationStorage<measurement_message> aggregationStorage;
-
 	gatewayServer.pushDataService pushDataService;
-	public gatewayServer(int port, int portNext, String hostNext, int aggregationTime_s, int storagetime_m) throws IOException{
+
+	public gatewayServer(int port, int portNext, String hostNext, int aggregationTime_s, int storagetime_m) throws IOException, ConfigParseException{
 	    this.port = port;
 	    this.portNext = portNext;
 	    this.hostNext = hostNext;
-
+	    className = this.getClass().getSimpleName();
+	    dbClient = RedisClient.create("redis://localhost:6379");
+	    dbConnection = dbClient.connect();
 	    this.pushDataService = new pushDataService(hostNext, portNext, aggregationTime_s, storagetime_m);
-	    server = ServerBuilder.forPort(port).addService(pushDataService).build();
-	}
+	  
 
-	//TODO: implement an endpoint class
-	public gatewayServer(int port){
-		this.portNext = -1;
-		this.pushDataService = new pushDataService(null, portNext, -1, -1);
-		server = ServerBuilder.forPort(port).addService(pushDataService).build();
+
+	    server = ServerBuilder.forPort(port).addService(pushDataService).build();
 	}
 
 	public void setVerbose(boolean verbose){
 		this.pushDataService.setVerbose(verbose);
+
 	}
 
 	public void start() throws IOException{
@@ -98,6 +126,8 @@ class gatewayServer {
 		        System.err.println("*** shutting down gRPC server since JVM is shutting down");
 		        gatewayServer.this.stop();
 		        System.err.println("*** server shut down");
+			    dbConnection.close();
+				dbClient.shutdown();
 		      }
 		});
 	}
@@ -105,11 +135,19 @@ class gatewayServer {
 	    if (server != null) {
 	      server.shutdown();
 	    }
+	    if (dbConnection != null) {
+	    	dbConnection.close();
+	    	dbClient.shutdown();
+	    }
 	}
 	
 	public void blockUntilShutdown() throws InterruptedException {
 	    if (server != null) {
 	      server.awaitTermination();
+	    }
+	    if (dbConnection != null) {
+	    	dbConnection.close();
+	    	dbClient.shutdown();
 	    }
 	}
 	// implement push data service
@@ -118,13 +156,27 @@ class gatewayServer {
 		private final int portNext;
 		private final String hostNext;
 		private final int aggregationTime_s;
+		private final String appName;
+		private final ProvenanceContext pc;
+		private RedisCommands<String, String> syncCommands;
 		private boolean verbose;
+		
+		public pushDataService(String hostNext, int portNext, int aggregationTime_s, int storagetime_m) throws ConfigParseException {
 
-		public pushDataService(String hostNext, int portNext, int aggregationTime_s, int storagetime_m) {
+			
+
+			
 			this.portNext = portNext;
 		    this.hostNext = hostNext;
 		    this.aggregationTime_s = aggregationTime_s;
-
+		    
+		    //local storage client init
+		    
+		    syncCommands = dbConnection.sync();
+		    
+		    pc = ProvenanceContext.getOrCreate();
+		    appName = this.getClass().getSimpleName() ;
+		    
 		     if(aggregationTime_s > 0) {
 				 aggregationStorage = new TimedAggregationStorage<measurement_message>(aggregationTime_s, TimeUnit.MINUTES.toSeconds(storagetime_m)) {
 					 @Override public DoubleSummaryStatistics aggregate(List<measurement_message> items) {
@@ -142,18 +194,57 @@ class gatewayServer {
 		public StreamObserver<Grid_data> pushData(final StreamObserver<reply> responseObserver){
 			return new StreamObserver<Grid_data>() {
 				List<Grid_data> gDataList = new ArrayList<Grid_data>();
-				
+				List<Context> provContextList = new ArrayList<Context>();
 				// add each request message to gDataList
 				@Override
 				public void onNext(Grid_data request) {
 			        // Process the request and send a response or an error.
 			        try {
+			         
 			          // Accept and enqueue the request.
 			          String message = request.toString();
+			          
+			          // Save every parameter for easy handling and local saving
+			          String meterID = request.getMeasurement().getMeterId();
+			          long timestamp = request.getMeasurement().getTimestamp();
+			          String metricID = request.getMeasurement().getMetricId();
+			          String value = String.valueOf(request.getMeasurement().getValue());
+			          String provID = request.getProvId();
+			          String key = meterID + String.valueOf(timestamp);
+			          
+			          logger.info("key: " + key);
+			          logger.info("prov id: " + provID);
+			          syncCommands.hset(key, "metricID", metricID);
+			          syncCommands.hset(key, "value", "" + value);
+			          if (request.getProvId() != "") {
+			        	  syncCommands.hset(key, "ProvID", provID);
+			          }
+			          logger.info("db entry pushed: " + syncCommands.hgetall(key).toString());
+			          
+			          logger.info("Request: " + message);
+			          ContextBuilder cBuilder = new ContextBuilder();
+			          Context context = cBuilder.build();
+			          context.setAppName(appName);
+			          context.setClassName(className);
+			          context.setReceiveTime(new Date());
+			          // for now loc is just gateway for every hop lets think of sth later
+			          context.setLoc(new Location("gateway"));
+			          context.setLineNo((long) 185);
+			          context.setTimestamp(new Date((long)request.getMeasurement().getTimestamp()));
+			          
+			          /* uncomment for prov API arguments output
+			          logger.info("Appname: " + context.getAppName());
+			          logger.info("Class name: " + context.getClassName());
+			          logger.info("Receive Time: " + context.getReceiveTime());
+			          logger.info("location: " + context.getLoc().getLable());
+			          logger.info("Line no: " + context.getLineNo());
+			          logger.info("timestamp: " + context.getTimestamp());
+					*/
+			          provContextList.add(context);
+			          
 			          gDataList.add(request);
 
-			          logger.info("Request: " + message);
-					  if(verbose){
+			          if(verbose){
 						  System.out.println("got message: " + request.toString());
 					  }
 
@@ -183,21 +274,52 @@ class gatewayServer {
 
                       //iam an endpoint
 					  if(hostNext == null || portNext < 0){
-		        		reply response = reply.newBuilder().setResponseCode(response_content).build();
+						  Date sendTime;
+						  sendTime = new Date();
+						  logger.info("send time: " + sendTime);
+				          Datapoint[] dpList = new Datapoint[provContextList.size()];
+				          for (int i=0; i < gDataList.size(); i++) {
+					          provContextList.get(i).setSendTime(sendTime);
+					          dpList[i] = new Datapoint(provContextList.get(i));
+					            	
+					      }
+				          // uncomment following lines if DB is ready for provenance API
+				          //String[] provIds = new String[dpList.length];
+				          //provIds = pc.save(dpList);
+						  
+						reply response = reply.newBuilder().setResponseCode(response_content).build();
 						responseObserver.onNext(response);
 						logger.info("COMPLETED");
-
+						
 						responseObserver.onCompleted();
 		        		return;
 					}
-		            gatewayClient client = new gatewayClient(hostNext, portNext);
-		            try {
-						client.pushData(gDataList);	
-					} catch (InterruptedException e) {
+					  Date sendTime;
+					  gatewayClient client = new gatewayClient(hostNext, portNext);
+					  try {
+						sendTime = new Date();
+			            Datapoint[] dpList = new Datapoint[provContextList.size()];
+			            for (int i=0; i < gDataList.size(); i++) {
+				            provContextList.get(i).setSendTime(sendTime);
+				            dpList[i] = new Datapoint(provContextList.get(i));
+				            	
+				            }
+			            // uncomment following lines if DB is ready for provenance API
+			            /*
+			            String[] provIds = new String[dpList.length];
+			           
+			            provIds = pc.save(dpList);
+			            for(int i=0; i<provIds.length; i++) {
+			            	Grid_data message = gDataList.get(i);
+			            	Grid_data newMessage = Grid_data.newBuilder().setMeasurement(message.getMeasurement()).setProvId(provIds[i]).build();
+			            	gDataList.set(i, newMessage);	}*/
+						client.pushData(gDataList);	 
+						
+					  } catch (InterruptedException e) {
 						 //TODO Auto-generated catch block
 						e.printStackTrace();
-					} finally {
-						try {
+					  } finally {
+						  try {
 							client.shutdown();
 						} catch (InterruptedException e) {
 							// TODO Auto-generated catch block

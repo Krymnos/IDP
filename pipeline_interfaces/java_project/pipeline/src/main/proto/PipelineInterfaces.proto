@@ -21,6 +21,7 @@ service gateway {
 // in compliance with the data model provided from grid data
 message Grid_data {
   measurement_message measurement = 1;
+  string prov_id = 2;
 }
 
 // measurement_message
