@@ -105,6 +105,9 @@ class gatewayServer {
 	    className = this.getClass().getSimpleName();
 	    dbClient = RedisClient.create("redis://localhost:6379");
 	    dbConnection = dbClient.connect();
+	    if(dbConnection.isOpen()){
+	    	logger.info("Redis Connection to localhost:6379 was established");
+		}
 	    this.pushDataService = new pushDataService(hostNext, portNext, aggregationTime_s, storagetime_m);
 	  
 
