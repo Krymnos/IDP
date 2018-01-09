@@ -44,6 +44,8 @@ public class AggregationStorageTest
         final long STORAGE_TIME_S = 3;
         final long AGGREGATION_INTERVAL_S = 1;
 
+        final long TOLERANCE_MS = 100;
+
         final TimedAggregationStorage<PipelineInterfaces.measurement_message> storage =
                 new TimedAggregationStorage<PipelineInterfaces.measurement_message>(AGGREGATION_INTERVAL_S,
                         STORAGE_TIME_S) {
@@ -61,23 +63,23 @@ public class AggregationStorageTest
         storage.put(messages.get(1).getMeasurement());
         storage.put(messages.get(2).getMeasurement());
 
-        Thread.sleep(TimeUnit.SECONDS.toMillis(AGGREGATION_INTERVAL_S));
+        Thread.sleep(TimeUnit.SECONDS.toMillis(AGGREGATION_INTERVAL_S)+ TOLERANCE_MS);
         System.out.println(storage.getAggregations());
         Assert.assertTrue(storage.getAggregations().size() == 1);
 
         storage.put(messages.get(0).getMeasurement());
         storage.put(messages.get(1).getMeasurement());
-        Thread.sleep(TimeUnit.SECONDS.toMillis(AGGREGATION_INTERVAL_S));
+        Thread.sleep(TimeUnit.SECONDS.toMillis(AGGREGATION_INTERVAL_S) + TOLERANCE_MS);
 
         System.out.println(storage.getAggregations());
         Assert.assertTrue(storage.getAggregations().size() == 2);
 
         // remaining time before the first aggregation entry is removed
-        Thread.sleep(TimeUnit.SECONDS.toMillis(1));
+        Thread.sleep(TimeUnit.SECONDS.toMillis(1) + TOLERANCE_MS);
         Assert.assertTrue(storage.getAggregations().size() == 1);
         System.out.println(storage.getAggregations());
 
-        Thread.sleep(TimeUnit.SECONDS.toMillis(1));
+        Thread.sleep(TimeUnit.SECONDS.toMillis(1) + TOLERANCE_MS);
         Assert.assertTrue(storage.getAggregations().size() == 0);
         System.out.println(storage.getAggregations());
     }
