@@ -234,7 +234,8 @@ class gatewayServer {
 			          context.setLoc(new Location("gateway"));
 			          context.setLineNo((long) 185);
 			          context.setTimestamp(new Date((long)request.getMeasurement().getTimestamp()));
-			          
+			          context.setMeterId(meterID);
+			          context.setMetricId(metricID);
 			          /* uncomment for prov API arguments output
 			          logger.info("Appname: " + context.getAppName());
 			          logger.info("Class name: " + context.getClassName());
@@ -287,8 +288,8 @@ class gatewayServer {
 					            	
 					      }
 				          // uncomment following lines if DB is ready for provenance API
-				          //String[] provIds = new String[dpList.length];
-				          //provIds = pc.save(dpList);
+				          String[] provIds = new String[dpList.length];
+				          provIds = pc.save(dpList);
 						  
 						reply response = reply.newBuilder().setResponseCode(response_content).build();
 						responseObserver.onNext(response);
@@ -308,14 +309,24 @@ class gatewayServer {
 				            	
 				            }
 			            // uncomment following lines if DB is ready for provenance API
-			            /*
+			            
 			            String[] provIds = new String[dpList.length];
-			           
+			            logger.info("pc.save will be executed");
 			            provIds = pc.save(dpList);
+			            String pIds = "";
+			            for (int i=0; i < provIds.length; i++) {
+			            	if (i==0){
+			            		pIds = pIds + provIds[i];
+			            	}
+			            	else {
+			            	pIds=pIds +  ", " + provIds[i];
+			            	}
+			            }
+			            logger.info("list of prov_ids: " + pIds);
 			            for(int i=0; i<provIds.length; i++) {
 			            	Grid_data message = gDataList.get(i);
 			            	Grid_data newMessage = Grid_data.newBuilder().setMeasurement(message.getMeasurement()).setProvId(provIds[i]).build();
-			            	gDataList.set(i, newMessage);	}*/
+			            	gDataList.set(i, newMessage);	}
 						client.pushData(gDataList);	 
 						
 					  } catch (InterruptedException e) {
