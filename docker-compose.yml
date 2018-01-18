@@ -6,12 +6,12 @@ services:
             - gateway
         command: ["./wait-for-it.sh", "gateway:50051", "--", "./smemu", "-sourceFolder", "data/20170210", "-targetAddress", "gateway:50051" , "-targetType", "grpc-pipeline"]
     gateway:
-       image: pipeline_java:latest
+       image: cloudproto/pipeline_component:latest
        environment:
             - "ARGUMENTS=--port 50051 --host_next endpoint --port_next 50051"
        depends_on:
             - endpoint
     endpoint:
-       image: pipeline_java:latest
+       image: cloudproto/pipeline_component:latest
        environment:
            - "ARGUMENTS=--port 50051 --verbose"
