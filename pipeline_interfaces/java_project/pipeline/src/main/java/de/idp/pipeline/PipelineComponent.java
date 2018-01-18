@@ -289,9 +289,14 @@ class gatewayServer {
 					      }
 				          // uncomment following lines if DB is ready for provenance API
 				          String[] provIds = new String[dpList.length];
-				          provIds = pc.save(dpList);
-						  
-						reply response = reply.newBuilder().setResponseCode(response_content).build();
+						  try {
+							  provIds = pc.save(dpList);
+						  } catch (InterruptedException e) {
+							//TODO: handle error
+						  	e.printStackTrace();
+						  }
+
+						  reply response = reply.newBuilder().setResponseCode(response_content).build();
 						responseObserver.onNext(response);
 						logger.info("COMPLETED");
 						
