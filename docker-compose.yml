@@ -1,0 +1,17 @@
+version: '3'
+services:
+    source:
+        image: sensor:latest
+        depends_on:
+            - gateway
+        command: ["./wait-for-it.sh", "gateway:50051", "--", "./smemu", "-sourceFolder", "data/20170210", "-targetAddress", "gateway:50051" , "-targetType", "grpc-pipeline"]
+    gateway:
+       image: cloudproto/pipeline_component:latest
+       environment:
+            - "ARGUMENTS=--port 50051 --host_next endpoint --port_next 50051"
+       depends_on:
+            - endpoint
+    endpoint:
+       image: cloudproto/pipeline_component:latest
+       environment:
+           - "ARGUMENTS=--port 50051 --verbose"

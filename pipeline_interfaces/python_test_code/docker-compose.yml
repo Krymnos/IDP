@@ -1,0 +1,15 @@
+version: '3'
+services:
+    source:
+        image: pipeline:latest
+        command: python pipeline_component.py -r source -hn gateway
+        depends_on:
+            - gateway
+    gateway:
+        image: pipeline:latest
+        command: python pipeline_component.py -r gateway -hn endpoint
+        depends_on:
+            - endpoint
+    endpoint:
+        image: pipeline:latest
+        command: python pipeline_component.py -r endpoint

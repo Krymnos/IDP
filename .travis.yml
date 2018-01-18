@@ -1,0 +1,21 @@
+sudo: true
+language: java
+
+services:
+  - redis-server
+
+before_install:
+    - wget https://repo1.maven.org/maven2/com/google/protobuf/protoc/3.5.0/protoc-3.5.0-linux-x86_64.exe
+    - mvn install:install-file -DgroupId=com.google.protobuf -DartifactId=protoc -Dversion=3.5.0 -Dclassifier=linux-x86_64-debian -Dpackaging=exe -Dfile=./protoc-3.5.0-linux-x86_64.exe
+    - wget http://maven.aliyun.com/nexus/content/groups/public/io/grpc/protoc-gen-grpc-java/1.8.0/protoc-gen-grpc-java-1.8.0-linux-x86_64.exe
+    - mvn install:install-file -DgroupId=io.grpc -DartifactId=protoc-gen-grpc-java -Dversion=1.8.0 -Dclassifier=linux-x86_64-debian -Dpackaging=exe -Dfile=./protoc-gen-grpc-java-1.8.0-linux-x86_64.exe
+before_script: cd pipeline_interfaces/java_project/pipeline
+
+script: mvn package
+
+deploy:
+  provider: script
+  script: ./deploy_docker.sh
+  skip_cleanup: true
+  on:
+    branch: deployment

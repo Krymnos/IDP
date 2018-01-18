@@ -1,0 +1,36 @@
+// created by Kevin @ 6th Nov. 2017
+
+// provide proto version
+syntax = "proto3";
+
+// TODO specify options... e.g.
+// specifies java package name of our pipeline implementation
+option java_package = "de.idp.pipeline";
+
+
+package provenance_system;
+
+
+// prodide service definition:
+service gateway {
+  rpc push_data(stream Grid_data) returns (reply) {}
+}
+
+// Grid_data message
+// composition of meter- and measurement_message
+// in compliance with the data model provided from grid data
+message Grid_data {
+  measurement_message measurement = 1;
+}
+
+// measurement_message
+message measurement_message {
+  string meter_id = 1;
+  string metric_id = 2;
+  int64 timestamp = 3;
+  double value = 4;
+}
+
+message reply {
+  string response_code=1;
+}
