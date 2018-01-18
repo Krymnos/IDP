@@ -2,7 +2,8 @@
 University project
 
 # Build States
-* branch pipeline: [![Build Status](https://travis-ci.org/Krymnos/IDP.svg?branch=pipeline)](https://travis-ci.org/Krymnos/IDP) 
+* branch master: [![Build Status](https://travis-ci.org/Krymnos/IDP.svg?branch=master)](https://travis-ci.org/Krymnos/IDP) 
+* branch deployment: [![Build Status](https://travis-ci.org/Krymnos/IDP.svg?branch=deployment)](https://travis-ci.org/Krymnos/IDP) 
 
 # Pipeline
 
