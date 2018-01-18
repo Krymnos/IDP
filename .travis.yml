@@ -1,35 +1,27 @@
 sudo: true
-
-stages:
-    - install
-    - test
-    - name: deploy docker
-      if: branch =  deployment
+language: java
 
 services:
   - redis-server
 
-jobs:
-    include: 
-    stage: install
-        script:
-        - wget https://repo1.maven.org/maven2/com/google/protobuf/protoc/3.5.0/protoc-3.5.0-linux-x86_64.exe
-        - mvn install:install-file -DgroupId=com.google.protobuf -DartifactId=protoc -Dversion=3.5.0 -Dclassifier=linux-x86_64-debian -Dpackaging=exe -Dfile=./protoc-3.5.0-linux-x86_64.exe
-        - wget http://maven.aliyun.com/nexus/content/groups/public/io/grpc/protoc-gen-grpc-java/1.8.0/protoc-gen-grpc-java-1.8.0-linux-x86_64.exe
-        - mvn install:install-file -DgroupId=io.grpc -DartifactId=protoc-gen-grpc-java -Dversion=1.8.0 -Dclassifier=linux-x86_64-debian -Dpackaging=exe -Dfile=./protoc-gen-grpc-java-1.8.0-linux-x86_64.exe
-    stage: test
-        script:
-        - cd pipeline_interfaces/java_project/pipeline
-        - mvn test -B
-    
-    stage: docker deployment
-        if: branch = deployment
-        script:
-              - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
-              - docker build -t pipeline_java .
-              - docker images
-              - docker tag pipeline_java cloudproto/pipeline_java
-              - docker push cloudproto/pipeline_java
+before_install:
+    - wget https://repo1.maven.org/maven2/com/google/protobuf/protoc/3.5.0/protoc-3.5.0-linux-x86_64.exe
+    - mvn install:install-file -DgroupId=com.google.protobuf -DartifactId=protoc -Dversion=3.5.0 -Dclassifier=linux-x86_64-debian -Dpackaging=exe -Dfile=./protoc-3.5.0-linux-x86_64.exe
+    - wget http://maven.aliyun.com/nexus/content/groups/public/io/grpc/protoc-gen-grpc-java/1.8.0/protoc-gen-grpc-java-1.8.0-linux-x86_64.exe
+    - mvn install:install-file -DgroupId=io.grpc -DartifactId=protoc-gen-grpc-java -Dversion=1.8.0 -Dclassifier=linux-x86_64-debian -Dpackaging=exe -Dfile=./protoc-gen-grpc-java-1.8.0-linux-x86_64.exe
+before_script: cd pipeline_interfaces/java_project/pipeline
+
+deploy:
+  provider: script
+  script:
+    - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
+    - docker build -t pipeline_java .
+    - docker images
+    - docker tag pipeline_java cloudproto/pipeline_java
+    - docker push cloudproto/pipeline_java
+  skip_cleanup: true
+  on:
+    branch: deployment
             
     
     
