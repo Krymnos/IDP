@@ -3,7 +3,6 @@ package de.idp.pipeline;
 import de.idp.pipeline.util.SystemHelper;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.StatefulRedisConnection;
-import io.lettuce.core.api.async.RedisHashAsyncCommands;
 import io.lettuce.core.api.sync.RedisCommands;
 import io.provenance.ProvenanceContext;
 import io.provenance.exception.ConfigParseException;
@@ -51,7 +50,7 @@ public class SenderReceiverTest extends TestCase
 	commands = dbConnection.sync();
     commands.flushdb();
     Thread.sleep(TimeUnit.SECONDS.toMillis(1));
-    SystemHelper.setUpEnvironment();
+    SystemHelper.setPropertiesFile();
 
     
     //Client test

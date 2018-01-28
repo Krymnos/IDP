@@ -26,20 +26,17 @@ import io.provenance.types.Datapoint;
 import io.provenance.types.InputDatapoint;
 import io.provenance.types.Location;
 
+import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.DoubleSummaryStatistics;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import javax.swing.Action;
-import javax.swing.Timer;
 
 public class PipelineComponent {
 	
@@ -50,7 +47,6 @@ public class PipelineComponent {
 	
 	
 	public static void main(String[] argv) throws Exception {
-		SystemHelper.setUpEnvironment();
         Args args = new Args();
         JCommander comm = JCommander.newBuilder()
                 .addObject(args)
@@ -63,6 +59,13 @@ public class PipelineComponent {
         }
         
         System.out.println(args.toString());
+
+        if(args.propertiesfile != null ){
+            SystemHelper.setPropertiesFile(args.propertiesfile);
+        } else{
+            SystemHelper.setPropertiesFile();
+        }
+
         // Start server with args.port or default port
         if(args.port == null || args.port_next == null || args.host_next == null || args.location == null || args.storageTime == null) {
         	// use default values if a parameter is not set
@@ -483,6 +486,9 @@ class Args {
 
     @Parameter(names = {"-st", "--storagetime"}, description = "specify the storagetime of messages / aggregation (in seconds)")
     public Integer storageTime;
+
+    @Parameter(names = {"-prop", "--propertiesfile"}, description = "path to propertiesfile")
+    public String propertiesfile;
 
 	@Parameter(names = {"-v", "--verbose"}, description = "prints incomming messages to stdout")
 	public boolean verbose;
