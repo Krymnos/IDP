@@ -1,6 +1,10 @@
 package de.idp.pipeline;
 
 import de.idp.pipeline.util.SystemHelper;
+import io.lettuce.core.RedisClient;
+import io.lettuce.core.api.StatefulRedisConnection;
+import io.lettuce.core.api.async.RedisHashAsyncCommands;
+import io.lettuce.core.api.sync.RedisCommands;
 import io.provenance.ProvenanceContext;
 import io.provenance.exception.ConfigParseException;
 import junit.framework.Assert;
@@ -39,30 +43,53 @@ public class SenderReceiverTest extends TestCase
  * @throws ConfigParseException 
    */
   public void test_1() throws Exception {
+	RedisClient dbClient;
+	StatefulRedisConnection<String, String> dbConnection;
+	dbClient = RedisClient.create("redis://localhost:6379");
+	dbConnection = dbClient.connect();
+	RedisCommands<String, String> commands;
+	commands = dbConnection.sync();
+    commands.flushdb();
+    Thread.sleep(TimeUnit.SECONDS.toMillis(1));
     SystemHelper.setUpEnvironment();
+
     
     //Client test
 	ProvenanceContext pc =ProvenanceContext.getOrCreate();
-    gatewayServer gateway_1 = new gatewayServer(50051, 50052, "localhost", -1, -1);
+	
+    gatewayServer gateway_1 = new gatewayServer(50051, 50052, "localhost", "TEL1", 1);
     gateway_1.start();
-
-    gatewayServer endpoint = new gatewayServer(50052, -1, null, 1, 1);
-    endpoint.setVerbose(true);
+    
+    gatewayServer gateway_2 = new gatewayServer(50052, 50053, "localhost", "TEL2", 1);
+    gateway_2.start();
+    
+    gatewayServer endpoint = new gatewayServer(50053, -1, "", "TEL3", 1);
+    //endpoint.setVerbose(true);
     endpoint.start();
 
     gatewayClient client = new gatewayClient("localhost", 50051);
-    client.pushData(createDummyTestMessages(1));
+    client.pushData(createDummyTestMessages(3));
     client.shutdown();
+    
 
 
     // TODO: better evaluation. so far we check if there happens an aggregation on last gateway --> data arrived ;)
     Thread.sleep(TimeUnit.SECONDS.toMillis(1));
-    System.out.println(endpoint.aggregationStorage.getAggregations());
-    Assert.assertTrue(endpoint.aggregationStorage.getAggregations().size() > 0);
+    //System.out.println(endpoint.aggregationStorage.getAggregations());
+    //Assert.assertTrue(endpoint.aggregationStorage.getAggregations().size() > 0);
 
     gateway_1.stop();
+    gateway_2.stop();
     endpoint.stop();
+
+    
+    // test if local storage is filled --> if yes everything was ok
+	List<String> local_keys = new ArrayList<>();
+	local_keys = commands.keys("*");
+	System.out.println(local_keys);
+	Assert.assertEquals(9, local_keys.size());
   }
+
 
   // test function to create testmessages to be sent by test client
   private static List<PipelineInterfaces.Grid_data> createDummyTestMessages (int numMessages) {

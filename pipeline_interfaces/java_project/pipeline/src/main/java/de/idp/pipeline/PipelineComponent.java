@@ -23,8 +23,11 @@ import io.provenance.exception.ConfigParseException;
 import io.provenance.types.Context;
 import io.provenance.types.ContextBuilder;
 import io.provenance.types.Datapoint;
+import io.provenance.types.InputDatapoint;
 import io.provenance.types.Location;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -34,6 +37,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import javax.swing.Action;
+import javax.swing.Timer;
 
 public class PipelineComponent {
 	
@@ -58,12 +64,13 @@ public class PipelineComponent {
         
         System.out.println(args.toString());
         // Start server with args.port or default port
-        if(args.port == null || args.port_next == null || args.host_next == null || args.aggregationTime == null || args.storageTime == null) {
+        if(args.port == null || args.port_next == null || args.host_next == null || args.location == null || args.storageTime == null) {
         	// use default values if a parameter is not set
-        	gatewayServer server = new gatewayServer(50051, 50052, "localhost", 10, 5);
+        	gatewayServer server = new gatewayServer(50051, 50052, "localhost", "default", 5);
         	server.setVerbose(args.verbose);
         	server.start();
         	server.blockUntilShutdown();
+
         	
         	// Client test
         	//gatewayClient client = new gatewayClient("localhost", 50052);
@@ -71,7 +78,7 @@ public class PipelineComponent {
         	 
         } else {
         	// implement pipeline topology and config parameters
-        	gatewayServer server = new gatewayServer(args.port, args.port_next, args.host_next, args.aggregationTime, args.storageTime);
+        	gatewayServer server = new gatewayServer(args.port, args.port_next, args.host_next, args.location, args.storageTime);
 			server.setVerbose(args.verbose);
         	server.start();
         	server.blockUntilShutdown();
@@ -83,6 +90,7 @@ public class PipelineComponent {
     }
 
 }
+
 // class for server implementation
 class gatewayServer {
 	private static final Logger logger = Logger.getLogger(gatewayServer.class.getName());
@@ -91,6 +99,7 @@ class gatewayServer {
 	private final Server server;
 	private final int portNext;
 	private final String hostNext;
+	private final String location;
 	public static String className;
 	public static RedisClient dbClient;
 	public static StatefulRedisConnection<String, String> dbConnection;
@@ -98,21 +107,23 @@ class gatewayServer {
 	
 	static TimedAggregationStorage<measurement_message> aggregationStorage;
 	gatewayServer.pushDataService pushDataService;
+	gatewayServer.localStorageTimer localStorageTimer;
 
-	public gatewayServer(int port, int portNext, String hostNext, int aggregationTime_s, int storagetime_m) throws IOException, ConfigParseException{
+	public gatewayServer(int port, int portNext, String hostNext, String location, int storagetime_m) throws IOException, ConfigParseException{
 	    this.port = port;
 	    this.portNext = portNext;
 	    this.hostNext = hostNext;
+	    this.location = location;
 	    className = this.getClass().getSimpleName();
 	    dbClient = RedisClient.create("redis://localhost:6379");
 	    dbConnection = dbClient.connect();
 	    if(dbConnection.isOpen()){
 	    	logger.info("Redis Connection to localhost:6379 was established");
 		}
-	    this.pushDataService = new pushDataService(hostNext, portNext, aggregationTime_s, storagetime_m);
-	  
-
-
+	    this.pushDataService = new pushDataService(hostNext, portNext, location, storagetime_m);
+	    this.localStorageTimer = new localStorageTimer(storagetime_m);
+	    
+	    
 	    server = ServerBuilder.forPort(port).addService(pushDataService).build();
 	}
 
@@ -154,25 +165,46 @@ class gatewayServer {
 	    	dbClient.shutdown();
 	    }
 	}
+    private static class localStorageTimer implements ActionListener {
+		RedisClient dbClient;
+		StatefulRedisConnection<String, String> dbConnection;
+		RedisCommands<String, String> commands;
+		static Timer myTimer;
+		
+		
+		public localStorageTimer(int storagetime) {
+			storagetime= storagetime*60*1000;
+			myTimer = new Timer(storagetime, this);
+			myTimer.start();	
+		}
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			System.out.println("DB gets flushed");
+			dbClient = RedisClient.create("redis://localhost:6379");
+			dbConnection = dbClient.connect();
+			commands = dbConnection.sync();
+			commands.flushdb();
+		}
+	}
 	// implement push data service
 	private static class pushDataService extends gatewayImplBase{
 		private static final Logger logger = Logger.getLogger(PipelineComponent.class.getName());
 		private final int portNext;
 		private final String hostNext;
-		private final int aggregationTime_s;
+		private final String location;
 		private final String appName;
 		private final ProvenanceContext pc;
 		private RedisHashAsyncCommands<String, String> asyncCommands;
 		private boolean verbose;
 		
-		public pushDataService(String hostNext, int portNext, int aggregationTime_s, int storagetime_m) throws ConfigParseException {
+		public pushDataService(String hostNext, int portNext, String location, int storagetime_m) throws ConfigParseException {
 
 			
 
 			
 			this.portNext = portNext;
 		    this.hostNext = hostNext;
-		    this.aggregationTime_s = aggregationTime_s;
+		    this.location = location;
 		    
 		    //local storage client init
 		    
@@ -180,14 +212,7 @@ class gatewayServer {
 		    
 		    pc = ProvenanceContext.getOrCreate();
 		    appName = this.getClass().getSimpleName() ;
-		    
-		     if(aggregationTime_s > 0) {
-				 aggregationStorage = new TimedAggregationStorage<measurement_message>(aggregationTime_s, TimeUnit.MINUTES.toSeconds(storagetime_m)) {
-					 @Override public DoubleSummaryStatistics aggregate(List<measurement_message> items) {
-						 return items.stream().mapToDouble(measurement_message::getValue).summaryStatistics();
-					 }
-				 };
-			 }
+
 		}
 
 		public void setVerbose(boolean verbose){
@@ -211,9 +236,7 @@ class gatewayServer {
 			          // Save every parameter for easy handling and local saving
 			          String meterID = request.getMeasurement().getMeterId();
 			          String metricID = request.getMeasurement().getMetricId();
-			          String provID = request.getProvId();
 			          
-			       
 			          
 			          logger.info("Request: " + message);
 			          ContextBuilder cBuilder = new ContextBuilder();
@@ -223,20 +246,20 @@ class gatewayServer {
 			          context.setReceiveTime(new Date());
 			          // for now loc is just gateway for every hop lets think of sth later
 			          
-			          context.setLoc(new Location("gateway"));
+			          context.setLoc(new Location(location));
 			          context.setLineNo((long) 185);
 			          context.setTimestamp(new Date((long)request.getMeasurement().getTimestamp()));
 			          context.setMeterId(meterID);
 			          context.setMetricId(metricID);
 			        
-			          /* uncomment for prov API arguments output
+			          //uncomment for prov API arguments output
 			          logger.info("Appname: " + context.getAppName());
 			          logger.info("Class name: " + context.getClassName());
 			          logger.info("Receive Time: " + context.getReceiveTime());
 			          logger.info("location: " + context.getLoc().getLable());
 			          logger.info("Line no: " + context.getLineNo());
 			          logger.info("timestamp: " + context.getTimestamp());
-					*/
+					
 			          provContextList.add(context);
 			          
 			          gDataList.add(request);
@@ -245,9 +268,6 @@ class gatewayServer {
 						  System.out.println("got message: " + request.toString());
 					  }
 
-			          if(aggregationTime_s > 0){
-						aggregationStorage.put(request.getMeasurement());
-					  }
 
 		            } catch (Throwable throwable) {
 		              throwable.printStackTrace();
@@ -275,10 +295,18 @@ class gatewayServer {
 						  sendTime = new Date();
 						  logger.info("send time: " + sendTime);
 				          Datapoint[] dpList = new Datapoint[provContextList.size()];
+				          InputDatapoint[] inputdatapoints= new InputDatapoint[1];
 				          for (int i=0; i < gDataList.size(); i++) {
 					          provContextList.get(i).setSendTime(sendTime);
 					          dpList[i] = new Datapoint(provContextList.get(i));
-					            	
+					          
+					          if (gDataList.get(i).getProvId()!= "") {
+					            	System.out.println("print");
+					            	inputdatapoints[0] = new InputDatapoint((gDataList.get(i).getProvId()), "simple");
+					            	//System.out.println(inputdatapoints[0]);
+					            	dpList[i].setInputDatapoints(inputdatapoints);
+					            	logger.info("input datapoints= " + dpList[i].getInputDatapoints()[0].getId());
+					            } 	
 					      }
 				          // uncomment following lines if DB is ready for provenance API
 				          String[] provIds = new String[dpList.length];
@@ -308,11 +336,18 @@ class gatewayServer {
 					  gatewayClient client = new gatewayClient(hostNext, portNext);
 					  try {
 						sendTime = new Date();
+						InputDatapoint[] inputdatapoints= new InputDatapoint[1];
 			            Datapoint[] dpList = new Datapoint[provContextList.size()];
 			            for (int i=0; i < gDataList.size(); i++) {
 				            provContextList.get(i).setSendTime(sendTime);
 				            dpList[i] = new Datapoint(provContextList.get(i));
-				            	
+				            if (gDataList.get(i).getProvId()!= "") {
+				            	inputdatapoints[0] = new InputDatapoint((gDataList.get(i).getProvId()), "simple");
+				            	//System.out.println(inputdatapoints[0]);
+				            	dpList[i].setInputDatapoints(inputdatapoints);
+				            	logger.info("input datapoints= " + dpList[i].getInputDatapoints()[0].getId());
+				            }
+				            
 				            }
 			            // uncomment following lines if DB is ready for provenance API
 			            
@@ -343,7 +378,8 @@ class gatewayServer {
 			            for(int i=0; i<provIds.length; i++) {
 			            	Grid_data message = gDataList.get(i);
 			            	Grid_data newMessage = Grid_data.newBuilder().setMeasurement(message.getMeasurement()).setProvId(provIds[i]).build();
-			            	gDataList.set(i, newMessage);	}
+			            	gDataList.set(i, newMessage);	
+			            }
 						client.pushData(gDataList);	 
 						
 					  } catch (InterruptedException e) {
@@ -442,9 +478,8 @@ class Args {
                                                              + " node is an endpoint.")
     public String host_next;
 
-    @Parameter(names = {"-agg", "--aggregationTime"}, description = "aggregate message values (min, max, avg) of the last n"
-                                                            + " seconds. If this is not set then no aggregation takes place.")
-    public Integer aggregationTime;
+    @Parameter(names = {"-loc", "--location"}, description = "location of this component")
+    public String location;
 
     @Parameter(names = {"-st", "--storagetime"}, description = "specify the storagetime of messages / aggregation (in seconds)")
     public Integer storageTime;
@@ -460,7 +495,7 @@ class Args {
               "port=" + port +
               ", port_next=" + port_next +
               ", host_next='" + host_next + '\'' +
-              ", aggregationTime=" + aggregationTime +
+              ", location=" + location +
               ", storageTime=" + storageTime +
 			  ", verbose=" + verbose +
               '}';
