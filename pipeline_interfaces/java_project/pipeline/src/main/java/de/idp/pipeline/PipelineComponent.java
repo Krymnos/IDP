@@ -16,6 +16,7 @@ import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.StatefulRedisConnection;
+import io.lettuce.core.api.async.RedisHashAsyncCommands;
 import io.lettuce.core.api.sync.RedisCommands;
 import io.provenance.ProvenanceContext;
 import io.provenance.exception.ConfigParseException;
@@ -161,7 +162,7 @@ class gatewayServer {
 		private final int aggregationTime_s;
 		private final String appName;
 		private final ProvenanceContext pc;
-		private RedisCommands<String, String> syncCommands;
+		private RedisHashAsyncCommands<String, String> asyncCommands;
 		private boolean verbose;
 		
 		public pushDataService(String hostNext, int portNext, int aggregationTime_s, int storagetime_m) throws ConfigParseException {
@@ -175,7 +176,7 @@ class gatewayServer {
 		    
 		    //local storage client init
 		    
-		    syncCommands = dbConnection.sync();
+		    asyncCommands = dbConnection.async();
 		    
 		    pc = ProvenanceContext.getOrCreate();
 		    appName = this.getClass().getSimpleName() ;
@@ -209,20 +210,10 @@ class gatewayServer {
 			          
 			          // Save every parameter for easy handling and local saving
 			          String meterID = request.getMeasurement().getMeterId();
-			          long timestamp = request.getMeasurement().getTimestamp();
 			          String metricID = request.getMeasurement().getMetricId();
-			          String value = String.valueOf(request.getMeasurement().getValue());
 			          String provID = request.getProvId();
-			          String key = meterID + String.valueOf(timestamp);
 			          
-			          logger.info("key: " + key);
-			          logger.info("prov id: " + provID);
-			          syncCommands.hset(key, "metricID", metricID);
-			          syncCommands.hset(key, "value", "" + value);
-			          if (request.getProvId() != "") {
-			        	  syncCommands.hset(key, "ProvID", provID);
-			          }
-			          logger.info("db entry pushed: " + syncCommands.hgetall(key).toString());
+			       
 			          
 			          logger.info("Request: " + message);
 			          ContextBuilder cBuilder = new ContextBuilder();
@@ -231,11 +222,13 @@ class gatewayServer {
 			          context.setClassName(className);
 			          context.setReceiveTime(new Date());
 			          // for now loc is just gateway for every hop lets think of sth later
+			          
 			          context.setLoc(new Location("gateway"));
 			          context.setLineNo((long) 185);
 			          context.setTimestamp(new Date((long)request.getMeasurement().getTimestamp()));
 			          context.setMeterId(meterID);
 			          context.setMetricId(metricID);
+			        
 			          /* uncomment for prov API arguments output
 			          logger.info("Appname: " + context.getAppName());
 			          logger.info("Class name: " + context.getClassName());
@@ -295,7 +288,15 @@ class gatewayServer {
 							//TODO: handle error
 						  	e.printStackTrace();
 						  }
-
+						  for (int i=0; i < provIds.length; i++) {
+                              asyncCommands.hset(provIds[i], "metricID", gDataList.get(i).getMeasurement().getMetricId());
+                              asyncCommands.hset(provIds[i], "value", "" + gDataList.get(i).getMeasurement().getValue());
+                              asyncCommands.hset(provIds[i], "meterID", "" + gDataList.get(i).getMeasurement().getMeterId());
+                              asyncCommands.hset(provIds[i], "timestamp", "" + gDataList.get(i).getMeasurement().getTimestamp());
+                              if (gDataList.get(i).getProvId() != "") {
+                                asyncCommands.hset(provIds[i], "ProvID", gDataList.get(i).getProvId());
+                              }
+						  }
 						  reply response = reply.newBuilder().setResponseCode(response_content).build();
 						responseObserver.onNext(response);
 						logger.info("COMPLETED");
@@ -328,6 +329,17 @@ class gatewayServer {
 			            	}
 			            }
 			            logger.info("list of prov_ids: " + pIds);
+			            
+			            for (int i=0; i < provIds.length; i++) {
+                            asyncCommands.hset(provIds[i], "metricID", gDataList.get(i).getMeasurement().getMetricId());
+                            asyncCommands.hset(provIds[i], "value", "" + gDataList.get(i).getMeasurement().getValue());
+                            asyncCommands.hset(provIds[i], "meterID", "" + gDataList.get(i).getMeasurement().getMeterId());
+                            asyncCommands.hset(provIds[i], "timestamp", "" + gDataList.get(i).getMeasurement().getTimestamp());
+                            if (gDataList.get(i).getProvId() != "") {
+                              asyncCommands.hset(provIds[i], "ProvID", gDataList.get(i).getProvId());
+                            }
+			            }
+			            
 			            for(int i=0; i<provIds.length; i++) {
 			            	Grid_data message = gDataList.get(i);
 			            	Grid_data newMessage = Grid_data.newBuilder().setMeasurement(message.getMeasurement()).setProvId(provIds[i]).build();
