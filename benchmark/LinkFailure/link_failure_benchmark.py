@@ -16,32 +16,29 @@ def findLinkFailure():
 	start = time.time()
 	rows = session.execute("SELECT * FROM node")
 	for node_row in rows:
-		heartBeatrows = session.execute("SELECT * FROM heartbeat where id='"+node_row.id+"'")
-		nodeActive = False
+		neighbour = False
 		nodeLinkActive = False
-		sameNode = False
-		for heartbeat_row in heartBeatrows:
-			if heartbeat_row.sentneighbourid == node_row.id:
-				nodeActive = True
-			if heartbeat_row.sentneighbourid == node_row.successor:
-				nodeLinkActive = True
-				if node_row.id == node_row.successor:
-					sameNode = True
-		if nodeActive == True:
-			print("Node:"+ node_row.id + " Active")
+		node1Active = False
+		node2Active = False
+		if node_row.successor != node_row.id:
+			heartBeatRows = session.execute("SELECT * FROM heartbeat where id in('"+node_row.id+"','"+node_row.successor+"')")
+			neighbour = True
 		else:
-			print("Node:"+ node_row.id + " InActive")
-			end = time.time()
-			print("Detected in : " + str(end - start)+" seconds")
-		if nodeLinkActive == True:
-			if sameNode == False:
-				print("Node:"+ node_row.id + " and successor "+ node_row.successor +" link remains connected")
-				end = time.time()
-				print("Detected in : " + str(end - start)+" seconds")
-		else:
-			print "Node:"+ node_row.id + " and successor "+ node_row.successor +" link disconnection found"
-			end = time.time()
-			print("Detected in : " + str(end - start)+" seconds")
+			heartBeatRows = session.execute("SELECT * FROM heartbeat where id='"+node_row.id+"'")
+		for heartbeat_row in heartBeatRows:
+			if heartbeat_row.id == node_row.id:
+				node1Active = True
+			if neighbour == True:
+				if heartbeat_row.id == node_row.successor:
+					node2Active = True
+					sentList = eval(heartbeat_row.sentneighbourid)
+					for sentneighbour in sentList:
+						if node_row.id == sentneighbour:
+							nodeLinkActive = True
+		if node1Active == True & node2Active == True & nodeLinkActive == True:
+			print("Link active between "+node_row.id+" and "+node_row.successor)
+		elif node1Active == True & node2Active == True:
+			print("Link broken between "+node_row.id+" and "+node_row.successor)
 	end = time.time()
 	print("Total Time taken: " + str(end - start))
 
