@@ -5,8 +5,14 @@ It's possible to start the pipeline part and the ui part separately.
 The compose files uses the last pushed images on dockerhub ( https://hub.docker.com/u/cloudproto/ )
 
 To start the *Pipeline* run:
-    
+
  ```docker-compose -f docker-compose-pipeline.yml up```
+
+To start the *Pipeline* that uses the sensordata stored on S3:
+
+ ```docker-compose -f docker-compose-pipeline-s3.yml up```
+
+*Before you run this compose file, add the AWS keys that are needed for acces to the S3 bucket*
 
 To start the UI (ui-backend and ui-frontend):
 
