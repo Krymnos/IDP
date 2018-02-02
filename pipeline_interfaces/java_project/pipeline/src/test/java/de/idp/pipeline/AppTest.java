@@ -1,5 +1,8 @@
 package de.idp.pipeline;
 
+import io.lettuce.core.RedisClient;
+import io.lettuce.core.api.StatefulRedisConnection;
+import io.lettuce.core.api.sync.RedisCommands;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -33,6 +36,13 @@ public class AppTest
      */
     public void testApp()
     {
+    	RedisClient dbClient;
+    	StatefulRedisConnection<String, String> dbConnection;
+    	dbClient = RedisClient.create("redis://localhost:6379");
+    	dbConnection = dbClient.connect();
+    	RedisCommands<String, String> commands;
+    	commands = dbConnection.sync();
+        commands.flushdb();
         System.out.println("Hallo");
         assertTrue( true );
     }

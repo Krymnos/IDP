@@ -24,4 +24,4 @@ services:
 #       use the deployed image
        image: cloudproto/pipeline_component:latest
        environment:
-           - "ARGUMENTS=--port 50051 --verbose"
+           - "ARGUMENTS=--port 50051"

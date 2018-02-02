@@ -67,8 +67,8 @@ public class PipelineComponent {
         }
 
         // Start server with args.port or default port
-        if(args.port == null || args.port_next == null || args.host_next == null || args.location == null || args.storageTime == null) {
-        	// use default values if a parameter is not set
+        if(argv.length == 0) {
+        	// use default values if parameters are not set
         	gatewayServer server = new gatewayServer(50051, 50052, "localhost", "default", 5);
         	server.setVerbose(args.verbose);
         	server.start();
@@ -79,7 +79,60 @@ public class PipelineComponent {
         	//gatewayClient client = new gatewayClient("localhost", 50052);
         	//client.pushData(testMessages);
         	 
-        } else {
+        	//args indicate endpoint
+        } else if (argv.length >= 1 && (args.port_next==null || args.host_next==null)) {
+        	logger.info("endpoint recognized");
+        	String location;
+        	int storage_time;
+        	int port;
+        	if (args.port==null) {
+        		port = 50051;
+        	} else {
+        		port =args.port;
+        	}
+        	if (args.location == null) {
+        		location = "default";
+        	} else {
+        		location = args.location;
+        	}
+        	if (args.storageTime == null) {
+        		storage_time = 5;
+        	} else {
+        		storage_time = args.storageTime;
+        	}
+        	gatewayServer server = new gatewayServer(port, -1, "", location, storage_time);
+        	server.setVerbose(args.verbose);
+        	server.start();
+        	server.blockUntilShutdown();
+        	
+        	//args indicate gateway
+        } else if (argv.length >= 1 && (args.port == null || args.location == null || args.storageTime == null)) {
+        	logger.info("gateway recognized");
+        	String location;
+        	int storage_time;
+        	int port;
+        	if (args.port==null) {
+        		port = 50051;
+        	} else {
+        		port =args.port;
+        	}
+        	if (args.location == null) {
+        		location = "default";
+        	} else {
+        		location = args.location;
+        	}
+        	if (args.storageTime == null) {
+        		storage_time = 5;
+        	} else {
+        		storage_time = args.storageTime;
+        	}
+        	gatewayServer server = new gatewayServer(port, args.port_next, args.host_next, location, storage_time);
+        	server.setVerbose(args.verbose);
+        	server.start();
+        	server.blockUntilShutdown();
+        }	
+        	// args are set
+        else {
         	// implement pipeline topology and config parameters
         	gatewayServer server = new gatewayServer(args.port, args.port_next, args.host_next, args.location, args.storageTime);
 			server.setVerbose(args.verbose);
@@ -225,14 +278,14 @@ class gatewayServer {
 		@Override
 		public StreamObserver<Grid_data> pushData(final StreamObserver<reply> responseObserver){
 			return new StreamObserver<Grid_data>() {
-				List<Grid_data> gDataList = new ArrayList<Grid_data>();
-				List<Context> provContextList = new ArrayList<Context>();
+				private List<Grid_data> gDataList = new ArrayList<Grid_data>();
+				private List<Context> provContextList = new ArrayList<Context>();
 				// add each request message to gDataList
 				@Override
 				public void onNext(Grid_data request) {
 			        // Process the request and send a response or an error.
 			        try {
-			         
+			         logger.info("gDataList length: "+ gDataList.size());
 			          // Accept and enqueue the request.
 			          String message = request.toString();
 			          
@@ -266,11 +319,13 @@ class gatewayServer {
 			          provContextList.add(context);
 			          
 			          gDataList.add(request);
-
+			          
 			          if(verbose){
 						  System.out.println("got message: " + request.toString());
 					  }
-
+			          if (gDataList.size()>=10){
+			        	  sendInbetween();			        	  
+			          }
 
 		            } catch (Throwable throwable) {
 		              throwable.printStackTrace();
@@ -278,7 +333,110 @@ class gatewayServer {
 		                  Status.UNKNOWN.withDescription("Error handling request").withCause(throwable).asException());
 		            }
 			      }
-
+				  public void sendInbetween() {
+					  if(hostNext == null || portNext < 0){
+						  Date sendTime;
+						  sendTime = new Date();
+						  logger.info("send time: " + sendTime);
+				          Datapoint[] dpList = new Datapoint[provContextList.size()];
+				          InputDatapoint[] inputdatapoints= new InputDatapoint[1];
+				          for (int i=0; i < gDataList.size(); i++) {
+					          provContextList.get(i).setSendTime(sendTime);
+					          dpList[i] = new Datapoint(provContextList.get(i));
+					          
+					          if (gDataList.get(i).getProvId()!= "") {
+					            	System.out.println("print");
+					            	inputdatapoints[0] = new InputDatapoint((gDataList.get(i).getProvId()), "simple");
+					            	//System.out.println(inputdatapoints[0]);
+					            	dpList[i].setInputDatapoints(inputdatapoints);
+					            	logger.info("input datapoints= " + dpList[i].getInputDatapoints()[0].getId());
+					            } 	
+					      }
+				          // uncomment following lines if DB is ready for provenance API
+				          String[] provIds = new String[dpList.length];
+						  try {
+							  provIds = pc.save(dpList);
+						  } catch (InterruptedException e) {
+							//TODO: handle error
+						  	e.printStackTrace();
+						  }
+						  for (int i=0; i < provIds.length; i++) {
+                              asyncCommands.hset(provIds[i], "metricID", gDataList.get(i).getMeasurement().getMetricId());
+                              asyncCommands.hset(provIds[i], "value", "" + gDataList.get(i).getMeasurement().getValue());
+                              asyncCommands.hset(provIds[i], "meterID", "" + gDataList.get(i).getMeasurement().getMeterId());
+                              asyncCommands.hset(provIds[i], "timestamp", "" + gDataList.get(i).getMeasurement().getTimestamp());
+                              if (gDataList.get(i).getProvId() != "") {
+                                asyncCommands.hset(provIds[i], "ProvID", gDataList.get(i).getProvId());
+                              }
+						  }
+						  gDataList.removeAll(gDataList);
+						  provContextList.removeAll(provContextList);
+						  return;
+					}
+					  Date sendTime;
+					  gatewayClient client = new gatewayClient(hostNext, portNext);
+					  try {
+						sendTime = new Date();
+						InputDatapoint[] inputdatapoints= new InputDatapoint[1];
+			            Datapoint[] dpList = new Datapoint[provContextList.size()];
+			            for (int i=0; i < gDataList.size(); i++) {
+				            provContextList.get(i).setSendTime(sendTime);
+				            dpList[i] = new Datapoint(provContextList.get(i));
+				            if (gDataList.get(i).getProvId()!= "") {
+				            	inputdatapoints[0] = new InputDatapoint((gDataList.get(i).getProvId()), "simple");
+				            	//System.out.println(inputdatapoints[0]);
+				            	dpList[i].setInputDatapoints(inputdatapoints);
+				            	logger.info("input datapoints= " + dpList[i].getInputDatapoints()[0].getId());
+				            }
+				            
+				            }
+			            // uncomment following lines if DB is ready for provenance API
+			            
+			            String[] provIds = new String[dpList.length];
+			            logger.info("pc.save will be executed");
+			            provIds = pc.save(dpList);
+			            String pIds = "";
+			            for (int i=0; i < provIds.length; i++) {
+			            	if (i==0){
+			            		pIds = pIds + provIds[i];
+			            	}
+			            	else {
+			            	pIds=pIds +  ", " + provIds[i];
+			            	}
+			            }
+			            logger.info("list of prov_ids: " + pIds);
+			            
+			            for (int i=0; i < provIds.length; i++) {
+                            asyncCommands.hset(provIds[i], "metricID", gDataList.get(i).getMeasurement().getMetricId());
+                            asyncCommands.hset(provIds[i], "value", "" + gDataList.get(i).getMeasurement().getValue());
+                            asyncCommands.hset(provIds[i], "meterID", "" + gDataList.get(i).getMeasurement().getMeterId());
+                            asyncCommands.hset(provIds[i], "timestamp", "" + gDataList.get(i).getMeasurement().getTimestamp());
+                            if (gDataList.get(i).getProvId() != "") {
+                              asyncCommands.hset(provIds[i], "ProvID", gDataList.get(i).getProvId());
+                            }
+			            }
+			            
+			            for(int i=0; i<provIds.length; i++) {
+			            	Grid_data message = gDataList.get(i);
+			            	Grid_data newMessage = Grid_data.newBuilder().setMeasurement(message.getMeasurement()).setProvId(provIds[i]).build();
+			            	gDataList.set(i, newMessage);	
+			            }
+						client.pushData(gDataList);	 
+						
+					  } catch (InterruptedException e) {
+						 //TODO Auto-generated catch block
+						e.printStackTrace();
+					  } finally {
+						  try {
+							client.shutdown();
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
+					  gDataList.removeAll(gDataList);
+					  provContextList.removeAll(provContextList);
+				  }
 				 @Override
 		          public void onError(Throwable t) {
 		            // End the response stream if the client presents an error.

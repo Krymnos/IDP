@@ -14,9 +14,21 @@ services:
 #       use the deployed image
         image: pipeline_java:latest
         environment:
+            - "ARGUMENTS=--port 50051 --host_next gateway2 --port_next 50051"
+        depends_on:
+            - endpoint
+    gateway2:
+#       use the local build image
+#       image: pipeline_java:latest
+
+#       use the deployed image
+        image: pipeline_java:latest
+        environment:
             - "ARGUMENTS=--port 50051 --host_next endpoint --port_next 50051"
         depends_on:
             - endpoint
+
+
     endpoint:
 #       use the local build image
 #       image: pipeline_java:latest
