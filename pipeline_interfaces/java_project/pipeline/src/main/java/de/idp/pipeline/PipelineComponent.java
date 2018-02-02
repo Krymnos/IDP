@@ -449,118 +449,129 @@ class gatewayServer {
 		            // Signal the end of work when the client ends the request stream.
 					  String response_content = "200";
 					  logger.info("Response: " + response_content);
+					  logger.info("gDataList size: "+gDataList.size());
+					  
+					  // if still messages in the queues process them
+					  if (gDataList.size()>0) {
 
-                      //iam an endpoint
-					  if(hostNext == null || portNext < 0){
+	                      //iam an endpoint
+						  if(hostNext == null || portNext < 0){
+							  Date sendTime;
+							  sendTime = new Date();
+							  logger.info("send time: " + sendTime);
+					          Datapoint[] dpList = new Datapoint[provContextList.size()];
+					          InputDatapoint[] inputdatapoints= new InputDatapoint[1];
+					          for (int i=0; i < gDataList.size(); i++) {
+						          provContextList.get(i).setSendTime(sendTime);
+						          dpList[i] = new Datapoint(provContextList.get(i));
+						          
+						          if (gDataList.get(i).getProvId()!= "") {
+						            	System.out.println("print");
+						            	inputdatapoints[0] = new InputDatapoint((gDataList.get(i).getProvId()), "simple");
+						            	//System.out.println(inputdatapoints[0]);
+						            	dpList[i].setInputDatapoints(inputdatapoints);
+						            	logger.info("input datapoints= " + dpList[i].getInputDatapoints()[0].getId());
+						            } 	
+						      }
+					          // uncomment following lines if DB is ready for provenance API
+					          String[] provIds = new String[dpList.length];
+							  try {
+								  provIds = pc.save(dpList);
+							  } catch (InterruptedException e) {
+								//TODO: handle error
+							  	e.printStackTrace();
+							  }
+							  for (int i=0; i < provIds.length; i++) {
+	                              asyncCommands.hset(provIds[i], "metricID", gDataList.get(i).getMeasurement().getMetricId());
+	                              asyncCommands.hset(provIds[i], "value", "" + gDataList.get(i).getMeasurement().getValue());
+	                              asyncCommands.hset(provIds[i], "meterID", "" + gDataList.get(i).getMeasurement().getMeterId());
+	                              asyncCommands.hset(provIds[i], "timestamp", "" + gDataList.get(i).getMeasurement().getTimestamp());
+	                              if (gDataList.get(i).getProvId() != "") {
+	                                asyncCommands.hset(provIds[i], "ProvID", gDataList.get(i).getProvId());
+	                              }
+							  }
+							  reply response = reply.newBuilder().setResponseCode(response_content).build();
+							responseObserver.onNext(response);
+							logger.info("COMPLETED");
+							
+							responseObserver.onCompleted();
+			        		return;
+						}
 						  Date sendTime;
-						  sendTime = new Date();
-						  logger.info("send time: " + sendTime);
-				          Datapoint[] dpList = new Datapoint[provContextList.size()];
-				          InputDatapoint[] inputdatapoints= new InputDatapoint[1];
-				          for (int i=0; i < gDataList.size(); i++) {
-					          provContextList.get(i).setSendTime(sendTime);
-					          dpList[i] = new Datapoint(provContextList.get(i));
-					          
-					          if (gDataList.get(i).getProvId()!= "") {
-					            	System.out.println("print");
+						  gatewayClient client = new gatewayClient(hostNext, portNext);
+						  try {
+							sendTime = new Date();
+							InputDatapoint[] inputdatapoints= new InputDatapoint[1];
+				            Datapoint[] dpList = new Datapoint[provContextList.size()];
+				            for (int i=0; i < gDataList.size(); i++) {
+					            provContextList.get(i).setSendTime(sendTime);
+					            dpList[i] = new Datapoint(provContextList.get(i));
+					            if (gDataList.get(i).getProvId()!= "") {
 					            	inputdatapoints[0] = new InputDatapoint((gDataList.get(i).getProvId()), "simple");
 					            	//System.out.println(inputdatapoints[0]);
 					            	dpList[i].setInputDatapoints(inputdatapoints);
 					            	logger.info("input datapoints= " + dpList[i].getInputDatapoints()[0].getId());
-					            } 	
-					      }
-				          // uncomment following lines if DB is ready for provenance API
-				          String[] provIds = new String[dpList.length];
-						  try {
-							  provIds = pc.save(dpList);
-						  } catch (InterruptedException e) {
-							//TODO: handle error
-						  	e.printStackTrace();
-						  }
-						  for (int i=0; i < provIds.length; i++) {
-                              asyncCommands.hset(provIds[i], "metricID", gDataList.get(i).getMeasurement().getMetricId());
-                              asyncCommands.hset(provIds[i], "value", "" + gDataList.get(i).getMeasurement().getValue());
-                              asyncCommands.hset(provIds[i], "meterID", "" + gDataList.get(i).getMeasurement().getMeterId());
-                              asyncCommands.hset(provIds[i], "timestamp", "" + gDataList.get(i).getMeasurement().getTimestamp());
-                              if (gDataList.get(i).getProvId() != "") {
-                                asyncCommands.hset(provIds[i], "ProvID", gDataList.get(i).getProvId());
-                              }
-						  }
-						  reply response = reply.newBuilder().setResponseCode(response_content).build();
-						responseObserver.onNext(response);
-						logger.info("COMPLETED");
-						
-						responseObserver.onCompleted();
-		        		return;
-					}
-					  Date sendTime;
-					  gatewayClient client = new gatewayClient(hostNext, portNext);
-					  try {
-						sendTime = new Date();
-						InputDatapoint[] inputdatapoints= new InputDatapoint[1];
-			            Datapoint[] dpList = new Datapoint[provContextList.size()];
-			            for (int i=0; i < gDataList.size(); i++) {
-				            provContextList.get(i).setSendTime(sendTime);
-				            dpList[i] = new Datapoint(provContextList.get(i));
-				            if (gDataList.get(i).getProvId()!= "") {
-				            	inputdatapoints[0] = new InputDatapoint((gDataList.get(i).getProvId()), "simple");
-				            	//System.out.println(inputdatapoints[0]);
-				            	dpList[i].setInputDatapoints(inputdatapoints);
-				            	logger.info("input datapoints= " + dpList[i].getInputDatapoints()[0].getId());
+					            }
+					            
+					            }
+				            // uncomment following lines if DB is ready for provenance API
+				            
+				            String[] provIds = new String[dpList.length];
+				            logger.info("pc.save will be executed");
+				            provIds = pc.save(dpList);
+				            String pIds = "";
+				            for (int i=0; i < provIds.length; i++) {
+				            	if (i==0){
+				            		pIds = pIds + provIds[i];
+				            	}
+				            	else {
+				            	pIds=pIds +  ", " + provIds[i];
+				            	}
+				            }
+				            logger.info("list of prov_ids: " + pIds);
+				            
+				            for (int i=0; i < provIds.length; i++) {
+	                            asyncCommands.hset(provIds[i], "metricID", gDataList.get(i).getMeasurement().getMetricId());
+	                            asyncCommands.hset(provIds[i], "value", "" + gDataList.get(i).getMeasurement().getValue());
+	                            asyncCommands.hset(provIds[i], "meterID", "" + gDataList.get(i).getMeasurement().getMeterId());
+	                            asyncCommands.hset(provIds[i], "timestamp", "" + gDataList.get(i).getMeasurement().getTimestamp());
+	                            if (gDataList.get(i).getProvId() != "") {
+	                              asyncCommands.hset(provIds[i], "ProvID", gDataList.get(i).getProvId());
+	                            }
 				            }
 				            
+				            for(int i=0; i<provIds.length; i++) {
+				            	Grid_data message = gDataList.get(i);
+				            	Grid_data newMessage = Grid_data.newBuilder().setMeasurement(message.getMeasurement()).setProvId(provIds[i]).build();
+				            	gDataList.set(i, newMessage);	
 				            }
-			            // uncomment following lines if DB is ready for provenance API
-			            
-			            String[] provIds = new String[dpList.length];
-			            logger.info("pc.save will be executed");
-			            provIds = pc.save(dpList);
-			            String pIds = "";
-			            for (int i=0; i < provIds.length; i++) {
-			            	if (i==0){
-			            		pIds = pIds + provIds[i];
-			            	}
-			            	else {
-			            	pIds=pIds +  ", " + provIds[i];
-			            	}
-			            }
-			            logger.info("list of prov_ids: " + pIds);
-			            
-			            for (int i=0; i < provIds.length; i++) {
-                            asyncCommands.hset(provIds[i], "metricID", gDataList.get(i).getMeasurement().getMetricId());
-                            asyncCommands.hset(provIds[i], "value", "" + gDataList.get(i).getMeasurement().getValue());
-                            asyncCommands.hset(provIds[i], "meterID", "" + gDataList.get(i).getMeasurement().getMeterId());
-                            asyncCommands.hset(provIds[i], "timestamp", "" + gDataList.get(i).getMeasurement().getTimestamp());
-                            if (gDataList.get(i).getProvId() != "") {
-                              asyncCommands.hset(provIds[i], "ProvID", gDataList.get(i).getProvId());
-                            }
-			            }
-			            
-			            for(int i=0; i<provIds.length; i++) {
-			            	Grid_data message = gDataList.get(i);
-			            	Grid_data newMessage = Grid_data.newBuilder().setMeasurement(message.getMeasurement()).setProvId(provIds[i]).build();
-			            	gDataList.set(i, newMessage);	
-			            }
-						client.pushData(gDataList);	 
-						
-					  } catch (InterruptedException e) {
-						 //TODO Auto-generated catch block
-						e.printStackTrace();
-					  } finally {
-						  try {
-							client.shutdown();
-						} catch (InterruptedException e) {
-							// TODO Auto-generated catch block
+							client.pushData(gDataList);	 
+							
+						  } catch (InterruptedException e) {
+							 //TODO Auto-generated catch block
 							e.printStackTrace();
+						  } finally {
+							  try {
+								client.shutdown();
+							} catch (InterruptedException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
 						}
-					}
-		            reply response = reply.newBuilder().setResponseCode(response_content).build();
-		            responseObserver.onNext(response);
-		        	logger.info("COMPLETED");
-		           
-		            responseObserver.onCompleted();
-		            
-		          }
+			            reply response = reply.newBuilder().setResponseCode(response_content).build();
+			            responseObserver.onNext(response);
+			        	logger.info("COMPLETED");
+			           
+			            responseObserver.onCompleted();
+			            // if no messages left just send response
+			          } else {
+			        	  	reply response = reply.newBuilder().setResponseCode(response_content).build();
+				            responseObserver.onNext(response);
+				        	logger.info("COMPLETED");
+				           
+				            responseObserver.onCompleted();
+			          }
+			        }
 			};
 		}
 		}
