@@ -52,23 +52,25 @@ public class SenderReceiverTest extends TestCase
 		
 	
 	
-    gatewayServer gateway_1 = new gatewayServer(50051, 50054, "localhost", "TEL1", 1);
+    gatewayServer gateway_1 = new gatewayServer(50051, 50052, "localhost", "TEL1", 1);
     gateway_1.start();
-    /*
+    
     gatewayServer gateway_2 = new gatewayServer(50052, 50053, "localhost", "TEL2", 1);
     gateway_2.start();
     
-    gatewayServer gateway_3 = new gatewayServer(50053, 50054, "localhost", "TEL3", 1);
-    gateway_3.start();
-    */
-    gatewayServer endpoint = new gatewayServer(50054, -1, "", "TEL4", 1);
+    //gatewayServer gateway_3 = new gatewayServer(50053, 50054, "localhost", "TEL3", 1);
+    //gateway_3.start();
+    
+    gatewayServer endpoint = new gatewayServer(50053, -1, "", "TEL4", 1);
     //endpoint.setVerbose(true);
     endpoint.start();
 
     gatewayClient client = new gatewayClient("localhost", 50051);
-    client.pushData(createDummyTestMessages(100));
-    client.shutdown();
+    client.pushData(createDummyTestMessages(15));
+   // client.pushData(createDummyTestMessages(1));
     
+    
+    client.shutdown();
 
 
     // TODO: better evaluation. so far we check if there happens an aggregation on last gateway --> data arrived ;)
@@ -77,7 +79,7 @@ public class SenderReceiverTest extends TestCase
     //Assert.assertTrue(endpoint.aggregationStorage.getAggregations().size() > 0);
 
     gateway_1.stop();
-    //gateway_2.stop();
+    gateway_2.stop();
     //gateway_3.stop();
     endpoint.stop();
     
