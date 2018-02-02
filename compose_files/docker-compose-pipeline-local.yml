@@ -5,13 +5,8 @@ services:
         depends_on:
             - gateway
         restart: always
-#        command: ["./wait-for-it.sh", "gateway:50051", "--", "./smemu", "-sourceFolder", "data/20170210", "-targetAddress", "gateway:50051" , "-targetType", "grpc-pipeline"]
         command: [ "sh", "-c", "sleep 10 && ./smemu -sourceFolder data/20170210 -targetAddress gateway:50051 -targetType grpc-pipeline" ]
     gateway:
-#       use the local build image
-#       image: pipeline_java:latest
-
-#       use the deployed image
         image: pipeline_java:latest
         environment:
             - "ARGUMENTS=--port 50051 --host_next gateway2 --port_next 50051"
@@ -30,10 +25,6 @@ services:
 
 
     endpoint:
-#       use the local build image
-#       image: pipeline_java:latest
-
-#       use the deployed image
        image: pipeline_java:latest
        environment:
            - "ARGUMENTS=--port 50051 --verbose"
