@@ -8,9 +8,9 @@ import timeit
 from functools import partial
 import random
 
-#cluster = Cluster(['122.129.79.66'],port=9042)
-cluster = Cluster()
-session = cluster.connect("provenancekey")
+cluster = Cluster(['122.129.79.66'],port=9042)
+#cluster = Cluster()
+session = cluster.connect("provenancekeytest")
 
 def findNodeFailure():
 	start = time.time()
