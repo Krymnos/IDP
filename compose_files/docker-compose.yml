@@ -1,26 +1,39 @@
 version: '3'
 services:
+    cassandra:
+        image: cassandra:latest
     source:
         image: cloudproto/sensor:latest
         depends_on:
             - gateway
         restart: always
-#        command: ["./wait-for-it.sh", "gateway:50051", "--", "./smemu", "-sourceFolder", "data/20170210", "-targetAddress", "gateway:50051" , "-targetType", "grpc-pipeline"]
-        command: [ "sh", "-c", "sleep 10 && ./smemu -sourceFolder data/20170210 -targetAddress gateway:50051 -targetType grpc-pipeline" ]
+        command: [ "sh", "-c", "sleep 30 && ./smemu -sourceFolder data/20170210 -targetAddress gateway:50051 -targetType grpc-pipeline -frequency 10000" ]
     gateway:
         image: cloudproto/pipeline_component:latest
         environment:
-            - "ARGUMENTS=--port 50051 --host_next endpoint --port_next 50051"
+            - CASSANDRA_HOST=cassandra
+            - NODE_ID=000001
+            - NODE_NAME=gateway
+            - ARGUMENTS=--port 50051 --host_next endpoint --port_next 50051
         depends_on:
             - endpoint
+            - cassandra
     endpoint:
-       image: cloudproto/pipeline_component:latest
-       environment:
-           - "ARGUMENTS=--port 50051 --verbose"
+        image: cloudproto/pipeline_component:latest
+        depends_on:
+            - cassandra
+        environment:
+            - CASSANDRA_HOST=cassandra
+            - ARGUMENTS=--port 50051
+            - NODE_ID=000002
+            - NODE_NAME=endpoint
 
     backend:
-        image: provenance-backend:latest
-    
+        image: cloudproto/provenancebackend:latest
+        environment:
+            - DB_IP=cassandra
+        depends_on:
+            - cassandra
     frontend:
         image: provenance-frontend:latest
         environment:
