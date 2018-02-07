@@ -27,4 +27,4 @@ ENV CASSANDRA_REPLICATION_FACTOR=1
 ENV BUFFER_CAPACITY=10
 ENV METRICS=meterid,metricid,loc,line,class,app,ctime,stime,rtime
 
-ENTRYPOINT [ "sh", "-c", "/usr/bin/redis-server --daemonize yes && sleep ${STARTUP_DELAY} && java $JAVA_OPTS -Djava.security.egd=file:/dev/./urandom -jar /app.jar $ARGUMENTS $CONFIGFILE" ]
+ENTRYPOINT [ "sh", "-c", "/usr/bin/redis-server --daemonize yes && sleep ${STARTUP_DELAY} && java $JAVA_OPTS -Djava.security.egd=file:/dev/./urandom -jar /app.jar $ARGUMENTS " ]
