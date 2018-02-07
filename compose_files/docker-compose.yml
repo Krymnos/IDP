@@ -35,7 +35,7 @@ services:
         depends_on:
             - cassandra
     frontend:
-        image: provenance-frontend:latest
+        image: cloudproto/provenancefrontend:latest
         environment:
             - "BACKEND_HOST=backend:5000"
         ports:
