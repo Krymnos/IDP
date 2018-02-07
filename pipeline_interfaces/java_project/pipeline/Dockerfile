@@ -9,6 +9,7 @@ ADD target/pipeline-0.1-jar-with-dependencies.jar app.jar
 RUN sh -c 'touch /app.jar'
 ENV JAVA_OPTS=""
 ENV ARGUMENTS=""
+ENV STARTUP_DELAY=20
 
 # default values for provenance system
 ENV CONF_LOC=EVAR
@@ -26,4 +27,4 @@ ENV CASSANDRA_REPLICATION_FACTOR=1
 ENV BUFFER_CAPACITY=10
 ENV METRICS=meterid,metricid,loc,line,class,app,ctime,stime,rtime
 
-ENTRYPOINT [ "sh", "-c", "/usr/bin/redis-server --daemonize yes && java $JAVA_OPTS -Djava.security.egd=file:/dev/./urandom -jar /app.jar $ARGUMENTS $CONFIGFILE" ]
+ENTRYPOINT [ "sh", "-c", "/usr/bin/redis-server --daemonize yes && sleep ${STARTUP_DELAY} && java $JAVA_OPTS -Djava.security.egd=file:/dev/./urandom -jar /app.jar $ARGUMENTS $CONFIGFILE" ]
