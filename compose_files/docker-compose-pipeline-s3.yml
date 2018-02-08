@@ -1,7 +1,7 @@
 version: '3'
 
 # to use the provenance volume it's mandatory to install the rexray/s3 plugin
-# docker plugin install rexray/s3fs:latest S3FS_ACCESSKEY=XXXXX S3FS_SECRETKEYXXXXXX
+# docker plugin install rexray/s3fs:latest S3FS_ACCESSKEY=XXXXX S3FS_SECRETKEY=XXXXXX
 
 volumes:
     provenancesensordata:
@@ -11,14 +11,25 @@ services:
     cassandra:
         image: cassandra:latest
 
-    source:
+## sensor container can retrieve unique sensor ids from this service
+    idprovider:
+        image: cloudproto/idprovider:latest
+        environment:
+            - START_ID=31400010000000000
+
+    sensorGroupA:
         image: cloudproto/sensor:latest
         depends_on:
-            - endpoint
+            - gateway
+            - idprovider
         restart: always
         volumes:
             - provenancesensordata:/mnt
-        command: [ "sh", "-c", "sleep 30 && ./smemu -sourceFolder /mnt/oneday/31400010000000000 gateway:50051 -targetType grpc-pipeline -frequency 10000" ]
+        environment:
+            - SENSOR_PARAMETERS=-sourceFolder /mnt/oneday -sensorIdProvider idprovider:8080 -frequency 1000 -targetAddress gateway:50051 -targetType grpc-pipeline
+            - STARTUP_DELAY=30
+
+
     gateway:
         image: cloudproto/pipeline_component:latest
         environment:
@@ -26,16 +37,19 @@ services:
             - NODE_ID=000001
             - NODE_NAME=gateway
             - ARGUMENTS=--port 50051 --host_next endpoint --port_next 50051
+            - STARTUP_DELAY=20
         depends_on:
             - endpoint
             - cassandra
+
     endpoint:
         image: cloudproto/pipeline_component:latest
         depends_on:
             - cassandra
         environment:
             - CASSANDRA_HOST=cassandra
-            - ARGUMENTS=--port 50051
+            - ARGUMENTS=--port 50051 --verbose
             - NODE_ID=000002
             - NODE_NAME=endpoint
+            - STARTUP_DELAY=20
 
