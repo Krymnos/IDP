@@ -159,11 +159,15 @@ class gatewayServer {
 	public static String className;
 	public static RedisClient dbClient;
 	public static StatefulRedisConnection<String, String> dbConnection;
+	public static double sendCount;
+	public static double receiveCount;
 	
 	
 	static TimedAggregationStorage<measurement_message> aggregationStorage;
-	gatewayServer.pushDataService pushDataService;
+	static gatewayServer.pushDataService pushDataService;
 	gatewayServer.localStorageTimer localStorageTimer;
+	static gatewayServer.markAliveTimer markAliveTimer1;
+	private sendReceiveTimer sendReceiveT;
 
 	public gatewayServer(int port, int portNext, String hostNext, String location, int storagetime_m) throws IOException, ConfigParseException{
 	    this.port = port;
@@ -178,8 +182,10 @@ class gatewayServer {
 		}
 	    this.pushDataService = new pushDataService(hostNext, portNext, location, storagetime_m);
 	    this.localStorageTimer = new localStorageTimer(storagetime_m);
-	    
-	    
+	    this.markAliveTimer1 = new markAliveTimer();
+	    this.sendReceiveT = new sendReceiveTimer();
+	    receiveCount=0;
+	    sendCount=0;
 	    server = ServerBuilder.forPort(port).addService(pushDataService).build();
 	}
 
@@ -231,7 +237,8 @@ class gatewayServer {
 		public localStorageTimer(int storagetime) {
 			storagetime= storagetime*60*1000;
 			myTimer = new Timer(storagetime, this);
-			myTimer.start();	
+			myTimer.start();
+			
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
@@ -242,6 +249,50 @@ class gatewayServer {
 			commands.flushdb();
 		}
 	}
+    static class markAliveTimer implements ActionListener {
+		
+		static Timer markTimer;
+		public markAliveTimer() {
+			int markTime= 60*1000;
+			markTimer = new Timer(markTime, this);
+			markTimer.start();
+			
+		}
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			pushDataService.callPcMarkAlive();
+		}
+	}
+    
+	class sendReceiveTimer implements ActionListener {
+		
+		Timer sendReceiveT;
+		public sendReceiveTimer() {
+			int time= 5*1000;
+			sendReceiveT = new Timer(time, this);
+			sendReceiveT.start();
+			
+		}
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			if (hostNext==null || portNext<1) {
+				pushDataService.sendReceiveSet(sendCount, receiveCount);
+				logger.info(":::::: Send count: " + sendCount);
+				logger.info(":::::: Receive count: " + receiveCount);
+				sendCount=0;
+				receiveCount=0;
+				logger.info(":::::: Send count: " + sendCount);
+				logger.info(":::::: Receive count: " + receiveCount);
+			}
+			else {
+				logger.info(":::::: Receive count: " + receiveCount);
+				pushDataService.receiveSet(receiveCount);
+				receiveCount=0;
+				logger.info(":::::: Receive count: " + receiveCount);
+			}
+		}
+	}
+    
 	// implement push data service
 	private static class pushDataService extends gatewayImplBase{
 		private static final Logger logger = Logger.getLogger(PipelineComponent.class.getName());
@@ -249,9 +300,12 @@ class gatewayServer {
 		private final String hostNext;
 		private final String location;
 		private final String appName;
-		private final ProvenanceContext pc;
+		final ProvenanceContext pc;
 		private RedisHashAsyncCommands<String, String> asyncCommands;
 		private boolean verbose;
+
+		
+	
 		
 		public pushDataService(String hostNext, int portNext, String location, int storagetime_m) throws ConfigParseException {
 
@@ -265,15 +319,38 @@ class gatewayServer {
 		    //local storage client init
 		    
 		    asyncCommands = dbConnection.async();
-		    
+
 		    pc = ProvenanceContext.getOrCreate();
+		    
 		    appName = this.getClass().getSimpleName() ;
 
+
 		}
+
 
 		public void setVerbose(boolean verbose){
 			this.verbose = verbose;
 		}
+		public void sendReceiveSet(double sendRate, double receiveRate) {
+			try {
+				this.pc.rate(sendRate, receiveRate);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		public void receiveSet(double receiveRate) {
+			try {
+				this.pc.receiveRate(receiveRate);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		public void callPcMarkAlive () {
+			logger.info(".........................................markAlive called");
+	    	//this.pc.markAlive();
+	    }
 
 		@Override
 		public StreamObserver<Grid_data> pushData(final StreamObserver<reply> responseObserver){
@@ -281,6 +358,7 @@ class gatewayServer {
 				private List<Grid_data> gDataList = new ArrayList<Grid_data>();
 				private List<Context> provContextList = new ArrayList<Context>();
 				// add each request message to gDataList
+
 				@Override
 				public void onNext(Grid_data request) {
 			        // Process the request and send a response or an error.
@@ -288,7 +366,8 @@ class gatewayServer {
 			         logger.info("gDataList length: "+ gDataList.size());
 			          // Accept and enqueue the request.
 			          String message = request.toString();
-			          
+			          receiveCount++;
+			          logger.info("-----Receive count: "+ receiveCount);
 			          // Save every parameter for easy handling and local saving
 			          String meterID = request.getMeasurement().getMeterId();
 			          String metricID = request.getMeasurement().getMetricId();
@@ -356,6 +435,9 @@ class gatewayServer {
 				          String[] provIds = new String[dpList.length];
 						  try {
 							  provIds = pc.save(dpList);
+							  logger.info(".............................timer restart gets called");
+							  markAliveTimer.markTimer.restart();
+							  
 						  } catch (InterruptedException e) {
 							//TODO: handle error
 						  	e.printStackTrace();
@@ -395,6 +477,8 @@ class gatewayServer {
 			            String[] provIds = new String[dpList.length];
 			            logger.info("pc.save will be executed");
 			            provIds = pc.save(dpList);
+						logger.info(".........................timer restart gets called");
+						markAliveTimer.markTimer.restart();
 			            String pIds = "";
 			            for (int i=0; i < provIds.length; i++) {
 			            	if (i==0){
@@ -419,7 +503,8 @@ class gatewayServer {
 			            for(int i=0; i<provIds.length; i++) {
 			            	Grid_data message = gDataList.get(i);
 			            	Grid_data newMessage = Grid_data.newBuilder().setMeasurement(message.getMeasurement()).setProvId(provIds[i]).build();
-			            	gDataList.set(i, newMessage);	
+			            	gDataList.set(i, newMessage);
+			            	sendCount++;
 			            }
 						client.pushData(gDataList);	 
 						
@@ -450,7 +535,7 @@ class gatewayServer {
 					  String response_content = "200";
 					  logger.info("Response: " + response_content);
 					  logger.info("gDataList size: "+gDataList.size());
-					  
+					 
 					  // if still messages in the queues process them
 					  if (gDataList.size()>0) {
 
@@ -477,6 +562,8 @@ class gatewayServer {
 					          String[] provIds = new String[dpList.length];
 							  try {
 								  provIds = pc.save(dpList);
+								  logger.info(".................................timer restart gets called");
+								  markAliveTimer.markTimer.restart();
 							  } catch (InterruptedException e) {
 								//TODO: handle error
 							  	e.printStackTrace();
@@ -519,6 +606,8 @@ class gatewayServer {
 				            String[] provIds = new String[dpList.length];
 				            logger.info("pc.save will be executed");
 				            provIds = pc.save(dpList);
+							logger.info("................................................timer restart gets called");
+							markAliveTimer.markTimer.restart();
 				            String pIds = "";
 				            for (int i=0; i < provIds.length; i++) {
 				            	if (i==0){
@@ -544,6 +633,7 @@ class gatewayServer {
 				            	Grid_data message = gDataList.get(i);
 				            	Grid_data newMessage = Grid_data.newBuilder().setMeasurement(message.getMeasurement()).setProvId(provIds[i]).build();
 				            	gDataList.set(i, newMessage);	
+				            	sendCount++;
 				            }
 							client.pushData(gDataList);	 
 							
