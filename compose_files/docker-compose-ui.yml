@@ -1,9 +1,15 @@
 version: '3'
 services:
+    cassandra:
+        image: cassandra:latest
     backend:
-        image: provenance-backend:latest
+        image: cloudproto/provenancebackend:latest
+        environment:
+            - DB_IP=cassandra
+        depends_on:
+            - cassandra
     frontend:
-        image: provenance-frontend:latest
+        image: cloudproto/provenancefrontend:latest
         environment:
             - "BACKEND_HOST=backend:5000"
         ports:

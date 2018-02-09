@@ -1,26 +1,55 @@
 version: '3'
 
+# to use the provenance volume it's mandatory to install the rexray/s3 plugin
+# docker plugin install rexray/s3fs:latest S3FS_ACCESSKEY=XXXXX S3FS_SECRETKEY=XXXXXX
+
+volumes:
+    provenancesensordata:
+        external: true
+
 services:
-    source:
-        image: cloudproto/sensor:s3
+    cassandra:
+        image: cassandra:latest
+
+## sensor container can retrieve unique sensor ids from this service
+    idprovider:
+        image: cloudproto/idprovider:latest
+        environment:
+            - START_ID=31400010000000000
+
+    sensorGroupA:
+        image: cloudproto/sensor:latest
         depends_on:
             - gateway
+            - idprovider
         restart: always
-        privileged: true
+        volumes:
+            - provenancesensordata:/mnt
         environment:
-            - BUCKET=provenancesensordata:oneday
-            - AWS_ACCESS_KEY_ID=ADD_YOUR_ACCESS_KEY
-            - AWS_SECRET_ACCESS_KEY=ADD_YOUR_SECRET_KEY
-            - REGION=eu-central-1
-            - SENSOR_PARAMETERS=-sourceFolder /mnt/s3/31400010000000000 -targetAddress gateway:50051 -targetType grpc-pipeline
-            - STARTUP_DELAY=10
+            - SENSOR_PARAMETERS=-sourceFolder /mnt/oneday -sensorIdProvider idprovider:8080 -frequency 1000 -targetAddress gateway:50051 -targetType grpc-pipeline
+            - STARTUP_DELAY=30
+
+
     gateway:
         image: cloudproto/pipeline_component:latest
         environment:
-            - "ARGUMENTS=--port 50051 --host_next endpoint --port_next 50051"
+            - CASSANDRA_HOST=cassandra
+            - NODE_ID=000001
+            - NODE_NAME=gateway
+            - ARGUMENTS=--port 50051 --host_next endpoint --port_next 50051
+            - STARTUP_DELAY=20
         depends_on:
             - endpoint
+            - cassandra
+
     endpoint:
-       image: cloudproto/pipeline_component:latest
-       environment:
-           - "ARGUMENTS=--port 50051 --verbose"
+        image: cloudproto/pipeline_component:latest
+        depends_on:
+            - cassandra
+        environment:
+            - CASSANDRA_HOST=cassandra
+            - ARGUMENTS=--port 50051 --verbose
+            - NODE_ID=000002
+            - NODE_NAME=endpoint
+            - STARTUP_DELAY=20
+

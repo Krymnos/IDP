@@ -20,6 +20,7 @@ import io.lettuce.core.api.async.RedisHashAsyncCommands;
 import io.lettuce.core.api.sync.RedisCommands;
 import io.provenance.ProvenanceContext;
 import io.provenance.exception.ConfigParseException;
+import io.provenance.exception.SetupException;
 import io.provenance.types.Context;
 import io.provenance.types.ContextBuilder;
 import io.provenance.types.Datapoint;
@@ -169,7 +170,8 @@ class gatewayServer {
 	static gatewayServer.markAliveTimer markAliveTimer1;
 	private sendReceiveTimer sendReceiveT;
 
-	public gatewayServer(int port, int portNext, String hostNext, String location, int storagetime_m) throws IOException, ConfigParseException{
+	public gatewayServer(int port, int portNext, String hostNext, String location, int storagetime_m)
+			throws IOException, ConfigParseException, SetupException {
 	    this.port = port;
 	    this.portNext = portNext;
 	    this.hostNext = hostNext;
@@ -307,7 +309,8 @@ class gatewayServer {
 		
 	
 		
-		public pushDataService(String hostNext, int portNext, String location, int storagetime_m) throws ConfigParseException {
+		public pushDataService(String hostNext, int portNext, String location, int storagetime_m)
+				throws ConfigParseException, SetupException {
 
 			
 
