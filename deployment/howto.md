@@ -32,9 +32,9 @@ sensorGroupA:
             - SENSOR_PARAMETERS=-sourceFolder /mnt/oneday -sensorIdProvider idprovider:8080 -frequency 1000 -targetAddress gateway:50051 -targetType grpc-pipeline
             - STARTUP_DELAY=30
 ```
-*SensorGroupA* : just a servicename, modify it to your needs
-STARTUP_DELAY : wait n seconds until the sensor is retrieving data.
-SENSOR_PARAMETER: for available parameters look at https://gitlab.tu-berlin.de/dominik-ernst/smemu
+* *SensorGroupA* : just a servicename, modify it to your needs
+* STARTUP_DELAY : wait n seconds until the sensor is retrieving data.
+* SENSOR_PARAMETER: for available parameters look at https://gitlab.tu-berlin.de/dominik-ernst/smemu
 
 * if you want to use data from the s3 bucket, don't change these parameters: ```-sourceFolder /mnt/oneday -sensorIdProvider idprovider:8080 ```) --> **scale with unique sensors possible**
 * if you want to use a file that is stored inside the image, remove the ```-sensorIdProvider``` entry and change sourcefolder-entry to ```-sourceFolder data/20170210``` --> **scale only with the same sensordata/sensorId is possible**
@@ -161,8 +161,10 @@ Note:
 * If some services fail at startup because other dependent nodes are not yet available, change the ```DELAY``` values in the environment sections of the nodes. 
 * watch out for the correct indentation 
 
-## AWS deployment
-(this step is already done .. just for your information)
+## AWS deployment 
+
+This step is already done .. just for your information):
+
 0.) Deploy the Stack on AWS. Followed this instructions to set up the docker-for-aws stack template.
 * https://docs.docker.com/docker-for-aws/#docker-community-edition-ce-for-aws 
 *https://console.aws.amazon.com/cloudformation/home#/stacks/new?stackName=Docker&templateURL=https://editions-us-east-1.s3.amazonaws.com/aws/stable/Docker.tmpl
@@ -184,13 +186,15 @@ Start your work:
     * wait... the instances will scale up / down after a while (can take a few minutes)
 
 2.) Install the ```rexray/s3fs``` volume plugin
-    * the ```rexray/s3fs``` has to be installed on all new worker instances to make the sensor data accessible (this is unfortunately a manual job)
-    * Attach the DockerManagerRole to worker instances to make the ssh access possible
     
-    * ![Network](./pics/2.png)
-    * ![Network](./pics/3.png)
+* the ```rexray/s3fs``` has to be installed on all new worker instances to make the sensor data accessible (this is unfortunately a manual job)
     
-    * ssh to every instance (yes!) and install the plugin by enter ((you will need the ```"cloudproto.pem"```)):
+* Attach the DockerManagerRole to worker instances to make the ssh access possible
+    
+* ![Network](./pics/2.png)
+* ![Network](./pics/3.png)
+    
+    * ssh to every instance (yes!) and install the plugin by entering:
         ```docker plugin install rexray/s3fs:latest S3FS_ACCESSKEY=XXXXX S3FS_SECRETKEY=XXXXXX``` (replace with credentials)
     (this has to be done for every new instance e.g. when you scale up)
 
@@ -267,9 +271,8 @@ verify: Service converged
 7.) Observe the output of every service instance:
 The output is piped to CloudWatch logs. If you open CloudWatch you will see an entry for every service:
 
-* ![Network](./pics/4.png)
-
-* ![Network](./pics/5.png)
+![Network](./pics/4.png)
+![Network](./pics/5.png)
 
 this can be opened to observer the output.
 
