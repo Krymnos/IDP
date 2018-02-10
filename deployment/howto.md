@@ -83,7 +83,7 @@ for example:
 * ```endpoint``` is the next node in the topology that is also specified as a service in the compose file (like this service ```gateway```).
 
 If you like to run a service as an endpoint (no next hop), just replace the ```ARGUMENTS``` variable with: 
-* ```ARGUMENTS=--port 50051 (no next hop)```
+* ```ARGUMENTS=--port 50051```
 
 
 You can vary these blocks to create complex topologies. Just copy the block, change the servicenames and define dependencies.
