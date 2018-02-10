@@ -161,13 +161,16 @@ Note:
 * If some services fail at startup because other dependent nodes are not yet available, change the ```DELAY``` values in the environment sections of the nodes. 
 * watch out for the correct indentation 
 
-## AWS deployment 
+## AWS Deployment 
 
 This step is already done .. just for your information):
 
 0.) Deploy the Stack on AWS. Followed this instructions to set up the docker-for-aws stack template.
+Instructions:
 * https://docs.docker.com/docker-for-aws/#docker-community-edition-ce-for-aws 
-*https://console.aws.amazon.com/cloudformation/home#/stacks/new?stackName=Docker&templateURL=https://editions-us-east-1.s3.amazonaws.com/aws/stable/Docker.tmpl
+
+Link to the Template:
+* https://console.aws.amazon.com/cloudformation/home#/stacks/new?stackName=Docker&templateURL=https://editions-us-east-1.s3.amazonaws.com/aws/stable/Docker.tmpl
 
 Start your work:
 
@@ -195,7 +198,9 @@ Start your work:
 * ![Network](./pics/3.png)
     
     * ssh to every instance (yes!) and install the plugin by entering:
-        ```docker plugin install rexray/s3fs:latest S3FS_ACCESSKEY=XXXXX S3FS_SECRETKEY=XXXXXX``` (replace with credentials)
+    
+    ```docker plugin install rexray/s3fs:latest S3FS_ACCESSKEY=XXXXX S3FS_SECRETKEY=XXXXXX``` (replace with credentials)
+    
     (this has to be done for every new instance e.g. when you scale up)
 
 ### how to deploy a topology ( docker compose file )
@@ -211,14 +216,14 @@ example:
 
     docker stack ls
 
- if you want to delete currently running services then run:
+ if you want to delete currently running stacks then run:
     
-    docker stack rm <service-name>
+    docker stack rm <stack-name>
 
 5.) Deploying the Stack:
         
-        docker stack deploy -c <your_topology_yaml> <your_stack_name>
-        (for example : docker stack deploy -c compose.yaml s3pipeline )
+    docker stack deploy -c <your_topology_yaml> <your_stack_name>
+    (for example : docker stack deploy -c compose.yaml s3pipeline )
 
 5.1) To show all running services get a list by enter:
 
