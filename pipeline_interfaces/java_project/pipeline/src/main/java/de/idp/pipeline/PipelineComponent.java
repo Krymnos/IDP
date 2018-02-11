@@ -72,6 +72,7 @@ public class PipelineComponent {
         	// use default values if parameters are not set
         	gatewayServer server = new gatewayServer(50051, 50052, "localhost", "default", 5);
         	server.setVerbose(args.verbose);
+        	server.setNoProv(args.no_prov);
         	server.start();
         	server.blockUntilShutdown();
 
@@ -103,6 +104,7 @@ public class PipelineComponent {
         	}
         	gatewayServer server = new gatewayServer(port, -1, "", location, storage_time);
         	server.setVerbose(args.verbose);
+        	server.setNoProv(args.no_prov);
         	server.start();
         	server.blockUntilShutdown();
         	
@@ -129,6 +131,7 @@ public class PipelineComponent {
         	}
         	gatewayServer server = new gatewayServer(port, args.port_next, args.host_next, location, storage_time);
         	server.setVerbose(args.verbose);
+        	server.setNoProv(args.no_prov);
         	server.start();
         	server.blockUntilShutdown();
         }	
@@ -137,6 +140,7 @@ public class PipelineComponent {
         	// implement pipeline topology and config parameters
         	gatewayServer server = new gatewayServer(args.port, args.port_next, args.host_next, args.location, args.storageTime);
 			server.setVerbose(args.verbose);
+			server.setNoProv(args.no_prov);
         	server.start();
         	server.blockUntilShutdown();
         	
@@ -160,11 +164,15 @@ class gatewayServer {
 	public static String className;
 	public static RedisClient dbClient;
 	public static StatefulRedisConnection<String, String> dbConnection;
+	public static double sendCount;
+	public static double receiveCount;
 	
 	
 	static TimedAggregationStorage<measurement_message> aggregationStorage;
-	gatewayServer.pushDataService pushDataService;
+	static gatewayServer.pushDataService pushDataService;
 	gatewayServer.localStorageTimer localStorageTimer;
+	static gatewayServer.markAliveTimer markAliveTimer1;
+	private sendReceiveTimer sendReceiveT;
 
 	public gatewayServer(int port, int portNext, String hostNext, String location, int storagetime_m)
 			throws IOException, ConfigParseException, SetupException {
@@ -180,15 +188,20 @@ class gatewayServer {
 		}
 	    this.pushDataService = new pushDataService(hostNext, portNext, location, storagetime_m);
 	    this.localStorageTimer = new localStorageTimer(storagetime_m);
-	    
-	    
+	    this.markAliveTimer1 = new markAliveTimer();
+	    this.sendReceiveT = new sendReceiveTimer();
+	    receiveCount=0;
+	    sendCount=0;
 	    server = ServerBuilder.forPort(port).addService(pushDataService).build();
 	}
 
 	public void setVerbose(boolean verbose){
 		this.pushDataService.setVerbose(verbose);
-
 	}
+	public void setNoProv(boolean no_prov){
+		this.pushDataService.setNoProv(no_prov);
+	}
+	
 
 	public void start() throws IOException{
 		server.start();
@@ -233,7 +246,8 @@ class gatewayServer {
 		public localStorageTimer(int storagetime) {
 			storagetime= storagetime*60*1000;
 			myTimer = new Timer(storagetime, this);
-			myTimer.start();	
+			myTimer.start();
+			
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
@@ -244,6 +258,51 @@ class gatewayServer {
 			commands.flushdb();
 		}
 	}
+    static class markAliveTimer implements ActionListener {
+		
+		static Timer markTimer;
+		public markAliveTimer() {
+			int markTime= 60*1000;
+			markTimer = new Timer(markTime, this);
+			markTimer.start();
+			
+		}
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			pushDataService.callPcMarkAlive();
+		}
+	}
+    
+	class sendReceiveTimer implements ActionListener {
+		
+		Timer sendReceiveT;
+		public sendReceiveTimer() {
+			int time= 30*1000;
+			sendReceiveT = new Timer(time, this);
+			sendReceiveT.start();
+			
+		}
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			if (hostNext==null || portNext<1) {
+				logger.info(":::::: Receive count: " + receiveCount);
+				pushDataService.receiveSet(receiveCount);
+				receiveCount=0;
+			}
+			else {
+			
+				pushDataService.sendReceiveSet(sendCount, receiveCount);
+				logger.info(":::::: Send count: " + sendCount);
+				logger.info(":::::: Receive count: " + receiveCount);
+				sendCount=0;
+				receiveCount=0;
+				
+				
+				
+			}
+		}
+	}
+    
 	// implement push data service
 	private static class pushDataService extends gatewayImplBase{
 		private static final Logger logger = Logger.getLogger(PipelineComponent.class.getName());
@@ -251,32 +310,56 @@ class gatewayServer {
 		private final String hostNext;
 		private final String location;
 		private final String appName;
-		private final ProvenanceContext pc;
+		final ProvenanceContext pc;
 		private RedisHashAsyncCommands<String, String> asyncCommands;
 		private boolean verbose;
+		private boolean no_prov;
+		
+	
 		
 		public pushDataService(String hostNext, int portNext, String location, int storagetime_m)
 				throws ConfigParseException, SetupException {
-
-			
-
-			
+		
 			this.portNext = portNext;
 		    this.hostNext = hostNext;
 		    this.location = location;
 		    
 		    //local storage client init
-		    
 		    asyncCommands = dbConnection.async();
-		    
 		    pc = ProvenanceContext.getOrCreate();
 		    appName = this.getClass().getSimpleName() ;
-
 		}
+
 
 		public void setVerbose(boolean verbose){
 			this.verbose = verbose;
 		}
+		public void setNoProv(boolean no_prov){
+			this.no_prov = no_prov;
+		}
+		public void sendReceiveSet(double sendRate, double receiveRate) {
+			try {
+				this.pc.rate(sendRate, receiveRate);
+				markAliveTimer.markTimer.restart();
+				
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		public void receiveSet(double receiveRate) {
+			try {
+				this.pc.receiveRate(receiveRate);
+				markAliveTimer.markTimer.restart();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		public void callPcMarkAlive () {
+			//logger.info(".........................................markAlive called");
+	    	this.pc.markAlive();
+	    }
 
 		@Override
 		public StreamObserver<Grid_data> pushData(final StreamObserver<reply> responseObserver){
@@ -284,20 +367,23 @@ class gatewayServer {
 				private List<Grid_data> gDataList = new ArrayList<Grid_data>();
 				private List<Context> provContextList = new ArrayList<Context>();
 				// add each request message to gDataList
+
 				@Override
 				public void onNext(Grid_data request) {
 			        // Process the request and send a response or an error.
 			        try {
-			         logger.info("gDataList length: "+ gDataList.size());
+			         //logger.info("gDataList length: "+ gDataList.size());
 			          // Accept and enqueue the request.
 			          String message = request.toString();
-			          
+			          receiveCount++;
+			          //logger.info("-----Receive count: "+ receiveCount);
 			          // Save every parameter for easy handling and local saving
 			          String meterID = request.getMeasurement().getMeterId();
 			          String metricID = request.getMeasurement().getMetricId();
 			          
 			          
-			          logger.info("Request: " + message);
+			         // logger.info("Request: " + message);
+			          if (no_prov==false) {
 			          ContextBuilder cBuilder = new ContextBuilder();
 			          Context context = cBuilder.build();
 			          context.setAppName(appName);
@@ -312,15 +398,15 @@ class gatewayServer {
 			          context.setMetricId(metricID);
 			        
 			          //uncomment for prov API arguments output
-			          logger.info("Appname: " + context.getAppName());
+			         /* logger.info("Appname: " + context.getAppName());
 			          logger.info("Class name: " + context.getClassName());
 			          logger.info("Receive Time: " + context.getReceiveTime());
 			          logger.info("location: " + context.getLoc().getLable());
 			          logger.info("Line no: " + context.getLineNo());
 			          logger.info("timestamp: " + context.getTimestamp());
-					
+					*/
 			          provContextList.add(context);
-			          
+			          }
 			          gDataList.add(request);
 			          
 			          if(verbose){
@@ -338,9 +424,12 @@ class gatewayServer {
 			      }
 				  public void sendInbetween() {
 					  if(hostNext == null || portNext < 0){
+						  String[] provIds;
+						  if (no_prov==false) {
 						  Date sendTime;
 						  sendTime = new Date();
 						  logger.info("send time: " + sendTime);
+						  
 				          Datapoint[] dpList = new Datapoint[provContextList.size()];
 				          InputDatapoint[] inputdatapoints= new InputDatapoint[1];
 				          for (int i=0; i < gDataList.size(); i++) {
@@ -356,12 +445,22 @@ class gatewayServer {
 					            } 	
 					      }
 				          // uncomment following lines if DB is ready for provenance API
-				          String[] provIds = new String[dpList.length];
+				          provIds = new String[dpList.length];
 						  try {
 							  provIds = pc.save(dpList);
+							  //logger.info(".............................timer restart gets called");
+							  markAliveTimer.markTimer.restart();
+							  
 						  } catch (InterruptedException e) {
 							//TODO: handle error
 						  	e.printStackTrace();
+						  }
+						  }
+						  else {
+							  provIds = new String[gDataList.size()];
+							  for (int i =0; i<gDataList.size();i++) {
+								  provIds[i]=String.valueOf(i) ;
+							  }
 						  }
 						  for (int i=0; i < provIds.length; i++) {
                               asyncCommands.hset(provIds[i], "metricID", gDataList.get(i).getMeasurement().getMetricId());
@@ -379,6 +478,8 @@ class gatewayServer {
 					  Date sendTime;
 					  gatewayClient client = new gatewayClient(hostNext, portNext);
 					  try {
+						String[] provIds;
+						 if (no_prov==false) {
 						sendTime = new Date();
 						InputDatapoint[] inputdatapoints= new InputDatapoint[1];
 			            Datapoint[] dpList = new Datapoint[provContextList.size()];
@@ -395,9 +496,11 @@ class gatewayServer {
 				            }
 			            // uncomment following lines if DB is ready for provenance API
 			            
-			            String[] provIds = new String[dpList.length];
+			            provIds = new String[dpList.length];
 			            logger.info("pc.save will be executed");
 			            provIds = pc.save(dpList);
+						//logger.info(".........................timer restart gets called");
+						markAliveTimer.markTimer.restart();
 			            String pIds = "";
 			            for (int i=0; i < provIds.length; i++) {
 			            	if (i==0){
@@ -408,7 +511,12 @@ class gatewayServer {
 			            	}
 			            }
 			            logger.info("list of prov_ids: " + pIds);
-			            
+						 }else {
+							 provIds = new String[gDataList.size()];
+							 for (int i=0; i<gDataList.size();i++) {
+								 provIds[i]=String.valueOf(i);
+							 }
+						 }
 			            for (int i=0; i < provIds.length; i++) {
                             asyncCommands.hset(provIds[i], "metricID", gDataList.get(i).getMeasurement().getMetricId());
                             asyncCommands.hset(provIds[i], "value", "" + gDataList.get(i).getMeasurement().getValue());
@@ -418,12 +526,13 @@ class gatewayServer {
                               asyncCommands.hset(provIds[i], "ProvID", gDataList.get(i).getProvId());
                             }
 			            }
-			            
+			            if (no_prov==false) {
 			            for(int i=0; i<provIds.length; i++) {
 			            	Grid_data message = gDataList.get(i);
 			            	Grid_data newMessage = Grid_data.newBuilder().setMeasurement(message.getMeasurement()).setProvId(provIds[i]).build();
-			            	gDataList.set(i, newMessage);	
-			            }
+			            	gDataList.set(i, newMessage);
+			            	sendCount++;
+			            }}
 						client.pushData(gDataList);	 
 						
 					  } catch (InterruptedException e) {
@@ -453,12 +562,14 @@ class gatewayServer {
 					  String response_content = "200";
 					  logger.info("Response: " + response_content);
 					  logger.info("gDataList size: "+gDataList.size());
-					  
+					 
 					  // if still messages in the queues process them
 					  if (gDataList.size()>0) {
 
 	                      //iam an endpoint
 						  if(hostNext == null || portNext < 0){
+							  String[] provIds;
+								 if (no_prov==false) {
 							  Date sendTime;
 							  sendTime = new Date();
 							  logger.info("send time: " + sendTime);
@@ -477,13 +588,21 @@ class gatewayServer {
 						            } 	
 						      }
 					          // uncomment following lines if DB is ready for provenance API
-					          String[] provIds = new String[dpList.length];
+					          provIds = new String[dpList.length];
 							  try {
 								  provIds = pc.save(dpList);
+								  logger.info(".................................timer restart gets called");
+								  markAliveTimer.markTimer.restart();
 							  } catch (InterruptedException e) {
 								//TODO: handle error
 							  	e.printStackTrace();
 							  }
+								 }else {
+									  provIds = new String[gDataList.size()];
+									  for (int i =0; i<gDataList.size();i++) {
+										  provIds[i]=String.valueOf(i) ;
+									  }
+								  }
 							  for (int i=0; i < provIds.length; i++) {
 	                              asyncCommands.hset(provIds[i], "metricID", gDataList.get(i).getMeasurement().getMetricId());
 	                              asyncCommands.hset(provIds[i], "value", "" + gDataList.get(i).getMeasurement().getValue());
@@ -500,9 +619,12 @@ class gatewayServer {
 							responseObserver.onCompleted();
 			        		return;
 						}
+						  
 						  Date sendTime;
 						  gatewayClient client = new gatewayClient(hostNext, portNext);
 						  try {
+							  String[] provIds;
+								 if (no_prov==false) {
 							sendTime = new Date();
 							InputDatapoint[] inputdatapoints= new InputDatapoint[1];
 				            Datapoint[] dpList = new Datapoint[provContextList.size()];
@@ -519,9 +641,11 @@ class gatewayServer {
 					            }
 				            // uncomment following lines if DB is ready for provenance API
 				            
-				            String[] provIds = new String[dpList.length];
+				            provIds = new String[dpList.length];
 				            logger.info("pc.save will be executed");
 				            provIds = pc.save(dpList);
+							//logger.info("................................................timer restart gets called");
+							markAliveTimer.markTimer.restart();
 				            String pIds = "";
 				            for (int i=0; i < provIds.length; i++) {
 				            	if (i==0){
@@ -532,7 +656,12 @@ class gatewayServer {
 				            	}
 				            }
 				            logger.info("list of prov_ids: " + pIds);
-				            
+								 } else {
+									  provIds = new String[gDataList.size()];
+									  for (int i =0; i<gDataList.size();i++) {
+										  provIds[i]=String.valueOf(i) ;
+									  }
+								  }
 				            for (int i=0; i < provIds.length; i++) {
 	                            asyncCommands.hset(provIds[i], "metricID", gDataList.get(i).getMeasurement().getMetricId());
 	                            asyncCommands.hset(provIds[i], "value", "" + gDataList.get(i).getMeasurement().getValue());
@@ -542,12 +671,13 @@ class gatewayServer {
 	                              asyncCommands.hset(provIds[i], "ProvID", gDataList.get(i).getProvId());
 	                            }
 				            }
-				            
+				            if (no_prov==false) {
 				            for(int i=0; i<provIds.length; i++) {
 				            	Grid_data message = gDataList.get(i);
 				            	Grid_data newMessage = Grid_data.newBuilder().setMeasurement(message.getMeasurement()).setProvId(provIds[i]).build();
 				            	gDataList.set(i, newMessage);	
-				            }
+				            	sendCount++;
+				            }}
 							client.pushData(gDataList);	 
 							
 						  } catch (InterruptedException e) {
@@ -665,6 +795,9 @@ class Args {
 	@Parameter(names = {"-v", "--verbose"}, description = "prints incomming messages to stdout")
 	public boolean verbose;
 
+	@Parameter(names = {"-no", "--no_prov"}, description = "if set no provenance data will be generated")
+	public boolean no_prov;
+	
     @Parameter(names = "--help", description = "prints this help", help = true)
     public boolean help;
 
