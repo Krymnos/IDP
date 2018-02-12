@@ -395,7 +395,7 @@ class gatewayServer {
 			          
 			          context.setLoc(new Location(location));
 			          context.setLineNo((long) 185);
-			          //context.setTimestamp(new Date((long)request.getMeasurement().getTimestamp()));
+			          context.setTimestamp(System.currentTimeMillis());
 			          context.setMeterId(meterID);
 			          context.setMetricId(metricID);
 			        
