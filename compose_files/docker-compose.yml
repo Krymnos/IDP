@@ -2,6 +2,8 @@ version: '3'
 services:
     cassandra:
         image: cassandra:latest
+        ports:
+            - "9042:9042"
     source:
         image: cloudproto/sensor:latest
         depends_on:
@@ -13,6 +15,7 @@ services:
         environment:
             - CASSANDRA_HOST=cassandra
             - NODE_ID=000001
+            - SUCCESSOR=000002
             - NODE_NAME=gateway
             - ARGUMENTS=--port 50051 --host_next endpoint --port_next 50051
         depends_on:
@@ -32,6 +35,8 @@ services:
         image: cloudproto/provenancebackend:latest
         environment:
             - DB_IP=cassandra
+        ports:
+            - "5000:5000"
         depends_on:
             - cassandra
     frontend:

@@ -375,40 +375,49 @@ class gatewayServer {
 			         //logger.info("gDataList length: "+ gDataList.size());
 			          // Accept and enqueue the request.
 			          String message = request.toString();
+			          Grid_data newMessage;
+			          newMessage = null;
 			          receiveCount++;
 			          //logger.info("-----Receive count: "+ receiveCount);
 			          // Save every parameter for easy handling and local saving
 			          String meterID = request.getMeasurement().getMeterId();
 			          String metricID = request.getMeasurement().getMetricId();
-			          
-			          
+			          Date receiveTime = new Date();
+			          logger.info("receive time: " + receiveTime);
 			         // logger.info("Request: " + message);
 			          if (no_prov==false) {
 			          ContextBuilder cBuilder = new ContextBuilder();
 			          Context context = cBuilder.build();
 			          context.setAppName(appName);
 			          context.setClassName(className);
-			          context.setReceiveTime(new Date());
+			          context.setReceiveTime(receiveTime);
 			          // for now loc is just gateway for every hop lets think of sth later
 			          
 			          context.setLoc(new Location(location));
 			          context.setLineNo((long) 185);
-			          context.setTimestamp(new Date((long)request.getMeasurement().getTimestamp()));
+			          //context.setTimestamp(new Date((long)request.getMeasurement().getTimestamp()));
 			          context.setMeterId(meterID);
 			          context.setMetricId(metricID);
 			        
 			          //uncomment for prov API arguments output
-			         /* logger.info("Appname: " + context.getAppName());
+			          logger.info("Appname: " + context.getAppName());
 			          logger.info("Class name: " + context.getClassName());
 			          logger.info("Receive Time: " + context.getReceiveTime());
 			          logger.info("location: " + context.getLoc().getLable());
 			          logger.info("Line no: " + context.getLineNo());
 			          logger.info("timestamp: " + context.getTimestamp());
-					*/
+					
 			          provContextList.add(context);
+			          }else {
+			        	  
+			        	  newMessage = Grid_data.newBuilder().setMeasurement(request.getMeasurement()).setProvId(request.getProvId()+", " + receiveTime).build();		        	  
+			        	  logger.info("Prov_id: " + newMessage);
 			          }
+			          if (newMessage == null) {
 			          gDataList.add(request);
-			          
+			          }else {
+			          gDataList.add(newMessage);
+			          }
 			          if(verbose){
 						  System.out.println("got message: " + request.toString());
 					  }
@@ -425,8 +434,9 @@ class gatewayServer {
 				  public void sendInbetween() {
 					  if(hostNext == null || portNext < 0){
 						  String[] provIds;
-						  if (no_prov==false) {
 						  Date sendTime;
+						  if (no_prov==false) {
+						  
 						  sendTime = new Date();
 						  logger.info("send time: " + sendTime);
 						  
@@ -457,10 +467,12 @@ class gatewayServer {
 						  }
 						  }
 						  else {
+							  
 							  provIds = new String[gDataList.size()];
 							  for (int i =0; i<gDataList.size();i++) {
 								  provIds[i]=String.valueOf(i) ;
 							  }
+							  
 						  }
 						  for (int i=0; i < provIds.length; i++) {
                               asyncCommands.hset(provIds[i], "metricID", gDataList.get(i).getMeasurement().getMetricId());
@@ -516,6 +528,13 @@ class gatewayServer {
 							 for (int i=0; i<gDataList.size();i++) {
 								 provIds[i]=String.valueOf(i);
 							 }
+							 sendTime= new Date();
+							 for (int i=0; i<gDataList.size();i++) {
+								 Grid_data message = gDataList.get(i);
+								 Grid_data newMessage = Grid_data.newBuilder().setMeasurement(message.getMeasurement()).setProvId(message.getProvId()+", " + sendTime).build();
+								 gDataList.set(i, newMessage);
+							 }
+							 
 						 }
 			            for (int i=0; i < provIds.length; i++) {
                             asyncCommands.hset(provIds[i], "metricID", gDataList.get(i).getMeasurement().getMetricId());
@@ -656,10 +675,17 @@ class gatewayServer {
 				            	}
 				            }
 				            logger.info("list of prov_ids: " + pIds);
-								 } else {
+							} else {
 									  provIds = new String[gDataList.size()];
 									  for (int i =0; i<gDataList.size();i++) {
 										  provIds[i]=String.valueOf(i) ;
+									  }
+									  sendTime= new Date();
+									  //sendTime= new Date(sendTime);
+									  for (int i=0; i<gDataList.size();i++) {
+										  Grid_data message = gDataList.get(i);
+										  Grid_data newMessage = Grid_data.newBuilder().setMeasurement(message.getMeasurement()).setProvId(message.getProvId()+", " + sendTime).build();
+										  gDataList.set(i, newMessage);
 									  }
 								  }
 				            for (int i=0; i < provIds.length; i++) {
