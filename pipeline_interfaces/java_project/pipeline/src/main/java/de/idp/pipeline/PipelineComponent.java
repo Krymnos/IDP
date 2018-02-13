@@ -162,6 +162,8 @@ class gatewayServer {
 	private final String hostNext;
 	private final String location;
 	public static String className;
+	public static double lat;
+	public static double lg;
 	public static RedisClient dbClient;
 	public static StatefulRedisConnection<String, String> dbConnection;
 	public static double sendCount;
@@ -262,7 +264,7 @@ class gatewayServer {
 		
 		static Timer markTimer;
 		public markAliveTimer() {
-			int markTime= 60*1000;
+			int markTime= 2*1000;
 			markTimer = new Timer(markTime, this);
 			markTimer.start();
 			
@@ -277,7 +279,7 @@ class gatewayServer {
 		
 		Timer sendReceiveT;
 		public sendReceiveTimer() {
-			int time= 30*1000;
+			int time= 1000;
 			sendReceiveT = new Timer(time, this);
 			sendReceiveT.start();
 			
@@ -383,6 +385,7 @@ class gatewayServer {
 			          String meterID = request.getMeasurement().getMeterId();
 			          String metricID = request.getMeasurement().getMetricId();
 			          Date receiveTime = new Date();
+			          long receiveTime2=System.currentTimeMillis();
 			          logger.info("receive time: " + receiveTime);
 			         // logger.info("Request: " + message);
 			          if (no_prov==false) {
@@ -410,7 +413,7 @@ class gatewayServer {
 			          provContextList.add(context);
 			          }else {
 			        	  
-			        	  newMessage = Grid_data.newBuilder().setMeasurement(request.getMeasurement()).setProvId(request.getProvId()+", " + receiveTime).build();		        	  
+			        	  newMessage = Grid_data.newBuilder().setMeasurement(request.getMeasurement()).setProvId(request.getProvId()+", " + receiveTime2).build();		        	  
 			        	  logger.info("Prov_id: " + newMessage);
 			          }
 			          if (newMessage == null) {
@@ -470,7 +473,7 @@ class gatewayServer {
 							  
 							  provIds = new String[gDataList.size()];
 							  for (int i =0; i<gDataList.size();i++) {
-								  provIds[i]=String.valueOf(i) ;
+								  provIds[i]=String.valueOf(System.nanoTime())+String.valueOf(i) ;
 							  }
 							  
 						  }
@@ -526,7 +529,7 @@ class gatewayServer {
 						 }else {
 							 provIds = new String[gDataList.size()];
 							 for (int i=0; i<gDataList.size();i++) {
-								 provIds[i]=String.valueOf(i);
+								 provIds[i]=String.valueOf(System.nanoTime())+String.valueOf(i);
 							 }
 							 sendTime= new Date();
 							 for (int i=0; i<gDataList.size();i++) {
@@ -619,7 +622,7 @@ class gatewayServer {
 								 }else {
 									  provIds = new String[gDataList.size()];
 									  for (int i =0; i<gDataList.size();i++) {
-										  provIds[i]=String.valueOf(i) ;
+										  provIds[i]=String.valueOf(System.nanoTime())+String.valueOf(i) ;
 									  }
 								  }
 							  for (int i=0; i < provIds.length; i++) {
@@ -678,7 +681,7 @@ class gatewayServer {
 							} else {
 									  provIds = new String[gDataList.size()];
 									  for (int i =0; i<gDataList.size();i++) {
-										  provIds[i]=String.valueOf(i) ;
+										  provIds[i]=String.valueOf(System.nanoTime())+String.valueOf(i) ;
 									  }
 									  sendTime= new Date();
 									  //sendTime= new Date(sendTime);
