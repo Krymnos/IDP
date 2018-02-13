@@ -38,6 +38,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 
 public class PipelineComponent {
 	
@@ -168,7 +171,8 @@ class gatewayServer {
 	public static StatefulRedisConnection<String, String> dbConnection;
 	public static double sendCount;
 	public static double receiveCount;
-	
+	public static PrintWriter pw;
+	public boolean no_prov2;
 	
 	static TimedAggregationStorage<measurement_message> aggregationStorage;
 	static gatewayServer.pushDataService pushDataService;
@@ -185,6 +189,8 @@ class gatewayServer {
 	    className = this.getClass().getSimpleName();
 	    dbClient = RedisClient.create("redis://localhost:6379");
 	    dbConnection = dbClient.connect();
+	    
+	    
 	    if(dbConnection.isOpen()){
 	    	logger.info("Redis Connection to localhost:6379 was established");
 		}
@@ -202,6 +208,15 @@ class gatewayServer {
 	}
 	public void setNoProv(boolean no_prov){
 		this.pushDataService.setNoProv(no_prov);
+		this.no_prov2 = no_prov;
+		if(no_prov2) {
+		    try {
+				pw = new PrintWriter(new File("/mnt/timestamp.csv"));
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 	}
 	
 
@@ -216,6 +231,7 @@ class gatewayServer {
 		        System.err.println("*** server shut down");
 			    dbConnection.close();
 				dbClient.shutdown();
+				pw.close();
 		      }
 		});
 	}
@@ -226,6 +242,10 @@ class gatewayServer {
 	    if (dbConnection != null) {
 	    	dbConnection.close();
 	    	dbClient.shutdown();
+	    
+	    }
+	    if (pw != null) {
+	    	pw.close();
 	    }
 	}
 	
@@ -236,6 +256,9 @@ class gatewayServer {
 	    if (dbConnection != null) {
 	    	dbConnection.close();
 	    	dbClient.shutdown();
+	    }
+	    if (pw != null) {
+	    	pw.close();
 	    }
 	}
     private static class localStorageTimer implements ActionListener {
@@ -474,6 +497,9 @@ class gatewayServer {
 							  provIds = new String[gDataList.size()];
 							  for (int i =0; i<gDataList.size();i++) {
 								  provIds[i]=String.valueOf(System.nanoTime())+String.valueOf(i) ;
+							  for (int j=0; j < provIds.length; j++) {
+									  pw.write(gDataList.get(j).getProvId()+'\n');
+								  }
 							  }
 							  
 						  }
@@ -482,6 +508,9 @@ class gatewayServer {
                               asyncCommands.hset(provIds[i], "value", "" + gDataList.get(i).getMeasurement().getValue());
                               asyncCommands.hset(provIds[i], "meterID", "" + gDataList.get(i).getMeasurement().getMeterId());
                               asyncCommands.hset(provIds[i], "timestamp", "" + gDataList.get(i).getMeasurement().getTimestamp());
+                              
+                              
+                              
                               if (gDataList.get(i).getProvId() != "") {
                                 asyncCommands.hset(provIds[i], "ProvID", gDataList.get(i).getProvId());
                               }
@@ -531,10 +560,10 @@ class gatewayServer {
 							 for (int i=0; i<gDataList.size();i++) {
 								 provIds[i]=String.valueOf(System.nanoTime())+String.valueOf(i);
 							 }
-							 sendTime= new Date();
+							 long sendTime2= System.currentTimeMillis();
 							 for (int i=0; i<gDataList.size();i++) {
 								 Grid_data message = gDataList.get(i);
-								 Grid_data newMessage = Grid_data.newBuilder().setMeasurement(message.getMeasurement()).setProvId(message.getProvId()+", " + sendTime).build();
+								 Grid_data newMessage = Grid_data.newBuilder().setMeasurement(message.getMeasurement()).setProvId(message.getProvId()+", " + sendTime2).build();
 								 gDataList.set(i, newMessage);
 							 }
 							 
@@ -624,6 +653,9 @@ class gatewayServer {
 									  for (int i =0; i<gDataList.size();i++) {
 										  provIds[i]=String.valueOf(System.nanoTime())+String.valueOf(i) ;
 									  }
+									  for (int j=0; j < provIds.length; j++) {
+										  pw.write(gDataList.get(j).getProvId()+'\n');
+									  }
 								  }
 							  for (int i=0; i < provIds.length; i++) {
 	                              asyncCommands.hset(provIds[i], "metricID", gDataList.get(i).getMeasurement().getMetricId());
@@ -683,11 +715,11 @@ class gatewayServer {
 									  for (int i =0; i<gDataList.size();i++) {
 										  provIds[i]=String.valueOf(System.nanoTime())+String.valueOf(i) ;
 									  }
-									  sendTime= new Date();
+									  long sendTime2= System.currentTimeMillis();
 									  //sendTime= new Date(sendTime);
 									  for (int i=0; i<gDataList.size();i++) {
 										  Grid_data message = gDataList.get(i);
-										  Grid_data newMessage = Grid_data.newBuilder().setMeasurement(message.getMeasurement()).setProvId(message.getProvId()+", " + sendTime).build();
+										  Grid_data newMessage = Grid_data.newBuilder().setMeasurement(message.getMeasurement()).setProvId(message.getProvId()+", " + sendTime2).build();
 										  gDataList.set(i, newMessage);
 									  }
 								  }
