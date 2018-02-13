@@ -165,8 +165,6 @@ class gatewayServer {
 	private final String hostNext;
 	private final String location;
 	public static String className;
-	public static double lat;
-	public static double lg;
 	public static RedisClient dbClient;
 	public static StatefulRedisConnection<String, String> dbConnection;
 	public static double sendCount;
@@ -339,7 +337,8 @@ class gatewayServer {
 		private RedisHashAsyncCommands<String, String> asyncCommands;
 		private boolean verbose;
 		private boolean no_prov;
-		
+		public static double lat;
+		public static double lg;
 	
 		
 		public pushDataService(String hostNext, int portNext, String location, int storagetime_m)
@@ -353,6 +352,8 @@ class gatewayServer {
 		    asyncCommands = dbConnection.async();
 		    pc = ProvenanceContext.getOrCreate();
 		    appName = this.getClass().getSimpleName() ;
+		    lat=7.772406+(Math.random()*(2.46408));
+		    lg=51.657817+(Math.random()*(2.262556));
 		}
 
 
@@ -392,7 +393,7 @@ class gatewayServer {
 				private List<Grid_data> gDataList = new ArrayList<Grid_data>();
 				private List<Context> provContextList = new ArrayList<Context>();
 				// add each request message to gDataList
-
+				
 				@Override
 				public void onNext(Grid_data request) {
 			        // Process the request and send a response or an error.
@@ -418,8 +419,7 @@ class gatewayServer {
 			          context.setClassName(className);
 			          context.setReceiveTime(receiveTime);
 			          // for now loc is just gateway for every hop lets think of sth later
-			          
-			          context.setLoc(new Location(location));
+			          context.setLoc(new Location(location, lat, lg));
 			          context.setLineNo((long) 185);
 			          context.setTimestamp(System.currentTimeMillis());
 			          context.setMeterId(meterID);
