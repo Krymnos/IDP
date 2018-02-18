@@ -67,7 +67,7 @@ public class SenderReceiverTest extends TestCase
 
     
     gatewayClient client = new gatewayClient("localhost", 50051);
-    Thread.sleep(TimeUnit.SECONDS.toMillis(10));
+    Thread.sleep(TimeUnit.SECONDS.toMillis(1));
     client.pushData(createDummyTestMessages(5));
    // client.pushData(createDummyTestMessages(1));
     
@@ -76,7 +76,7 @@ public class SenderReceiverTest extends TestCase
 
 
     // TODO: better evaluation. so far we check if there happens an aggregation on last gateway --> data arrived ;)
-    Thread.sleep(TimeUnit.SECONDS.toMillis(10));
+    Thread.sleep(TimeUnit.SECONDS.toMillis(1));
     //System.out.println(endpoint.aggregationStorage.getAggregations());
     //Assert.assertTrue(endpoint.aggregationStorage.getAggregations().size() > 0);
 
