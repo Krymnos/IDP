@@ -339,6 +339,8 @@ class gatewayServer {
 		private boolean no_prov;
 		public static double lat;
 		public static double lg;
+		private final String context;
+
 	
 		
 		public pushDataService(String hostNext, int portNext, String location, int storagetime_m)
@@ -351,6 +353,8 @@ class gatewayServer {
 		    //local storage client init
 		    asyncCommands = dbConnection.async();
 		    pc = ProvenanceContext.getOrCreate();
+		    String[] contextParams = pc.getContextParams();
+		    context = String.join(",", contextParams);
 		    appName = this.getClass().getSimpleName() ;
 		    lat=7.772406+(Math.random()*(2.46408));
 		    lg=51.657817+(Math.random()*(2.262556));
@@ -398,7 +402,7 @@ class gatewayServer {
 				public void onNext(Grid_data request) {
 			        // Process the request and send a response or an error.
 			        try {
-			         //logger.info("gDataList length: "+ gDataList.size());
+			          logger.info("gDataList length: "+ gDataList.size());
 			          // Accept and enqueue the request.
 			          String message = request.toString();
 			          Grid_data newMessage;
@@ -426,13 +430,13 @@ class gatewayServer {
 			          context.setMetricId(metricID);
 			        
 			          //uncomment for prov API arguments output
-			          logger.info("Appname: " + context.getAppName());
+			          /*logger.info("Appname: " + context.getAppName());
 			          logger.info("Class name: " + context.getClassName());
 			          logger.info("Receive Time: " + context.getReceiveTime());
 			          logger.info("location: " + context.getLoc().getLable());
 			          logger.info("Line no: " + context.getLineNo());
 			          logger.info("timestamp: " + context.getTimestamp());
-					
+					*/
 			          provContextList.add(context);
 			          }else {
 			        	  
@@ -563,7 +567,8 @@ class gatewayServer {
 							 long sendTime2= System.currentTimeMillis();
 							 for (int i=0; i<gDataList.size();i++) {
 								 Grid_data message = gDataList.get(i);
-								 Grid_data newMessage = Grid_data.newBuilder().setMeasurement(message.getMeasurement()).setProvId(message.getProvId()+", " + sendTime2).build();
+						 Grid_data newMessage = Grid_data.newBuilder().setMeasurement(message.getMeasurement()).setProvId(message.getProvId()+", " + sendTime2).setContext(context).build();
+
 								 gDataList.set(i, newMessage);
 							 }
 							 
@@ -580,7 +585,7 @@ class gatewayServer {
 			            if (no_prov==false) {
 			            for(int i=0; i<provIds.length; i++) {
 			            	Grid_data message = gDataList.get(i);
-			            	Grid_data newMessage = Grid_data.newBuilder().setMeasurement(message.getMeasurement()).setProvId(provIds[i]).build();
+			            	Grid_data newMessage = Grid_data.newBuilder().setMeasurement(message.getMeasurement()).setProvId(provIds[i]).setContext(context).build();
 			            	gDataList.set(i, newMessage);
 			            	sendCount++;
 			            }}
@@ -719,7 +724,8 @@ class gatewayServer {
 									  //sendTime= new Date(sendTime);
 									  for (int i=0; i<gDataList.size();i++) {
 										  Grid_data message = gDataList.get(i);
-										  Grid_data newMessage = Grid_data.newBuilder().setMeasurement(message.getMeasurement()).setProvId(message.getProvId()+", " + sendTime2).build();
+										  Grid_data newMessage = Grid_data.newBuilder().setMeasurement(message.getMeasurement()).setProvId(message.getProvId()+", " + sendTime2).setContext(context).build();
+
 										  gDataList.set(i, newMessage);
 									  }
 								  }
@@ -735,7 +741,8 @@ class gatewayServer {
 				            if (no_prov==false) {
 				            for(int i=0; i<provIds.length; i++) {
 				            	Grid_data message = gDataList.get(i);
-				            	Grid_data newMessage = Grid_data.newBuilder().setMeasurement(message.getMeasurement()).setProvId(provIds[i]).build();
+				            	Grid_data newMessage = Grid_data.newBuilder().setMeasurement(message.getMeasurement()).setProvId(provIds[i]).setContext(context).build();
+				            	logger.info(""+newMessage);
 				            	gDataList.set(i, newMessage);	
 				            	sendCount++;
 				            }}

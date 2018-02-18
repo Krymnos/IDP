@@ -22,6 +22,7 @@ service gateway {
 message Grid_data {
   measurement_message measurement = 1;
   string prov_id = 2;
+  string context = 3;
 }
 
 // measurement_message
