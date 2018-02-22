@@ -1,0 +1,125 @@
+\documentclass[12pt,a4paper]{book}
+%\usepackage{booksprint}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{authblk}
+\usepackage{hyperref}
+\usepackage{subcaption}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{outlines}
+\usepackage[tikz]{bclogo}
+\usepackage{tikz}
+\usetikzlibrary{calc}
+\usepackage{lipsum}
+\usepackage{environ}
+\renewcommand{\labelitemii}{\textbullet}
+
+%\usepackage[printonlyused,withpage]{acronym}
+\usepackage[nolist,withpage]{acronym}
+\usepackage{glossaries}
+\usepackage{gincltex}
+\usepackage{tabularx}
+\usepackage[all]{nowidow}
+
+\usepackage[style=numeric,natbib=true,backend=bibtex]{biblatex}
+\makeatletter
+\def\blx@maxline{77}
+\makeatother
+
+\usepackage{color}
+
+\definecolor{pblue}{rgb}{0.13,0.13,1}
+\definecolor{pgreen}{rgb}{0,0.5,0}
+\definecolor{pred}{rgb}{0.9,0,0}
+\definecolor{pgrey}{rgb}{0.46,0.45,0.48}
+
+\usepackage{listings}
+\lstset{language=Java,
+  showspaces=false,
+  showtabs=false,
+  breaklines=true,
+  showstringspaces=false,
+  breakatwhitespace=true,
+  commentstyle=\color{pgreen},
+  keywordstyle=\color{pblue},
+  stringstyle=\color{pred},
+  basicstyle=\ttfamily,
+  moredelim=[il][\textcolor{pgrey}]{\$\$},
+  moredelim=[is][\textcolor{pgrey}]{\%\%}{\%\%}
+}
+
+\addbibresource{main.bib}
+   
+%\renewcommand{\familydefault}{\sfdefault}
+
+\sloppy
+
+\makeglossaries
+\begin{document}
+	
+
+%-----------------------------------------
+% Title, Table of Contents
+%-----------------------------------------
+
+\input{title}
+%\logos
+\newpage
+\thispagestyle{empty}
+\mbox{}
+
+
+\setcounter{secnumdepth}{4}
+\setcounter{tocdepth}{3} 
+
+
+
+
+%-----------------------------------------
+% Content
+%-----------------------------------------
+
+\input{chapter/abstract}
+
+\tableofcontents
+
+% add here your parts of the documentation
+
+\input{chapter/introduction}
+\input{chapter/dummy}
+
+
+
+%-----------------------------------------
+% Appendix
+%-----------------------------------------
+
+\appendix
+% add here your parts of the appendix
+% \input{appendix}
+
+
+
+
+\backmatter
+
+\listoftables
+\listoffigures
+
+% Generate the glossary
+\chapter{Acronyms}
+\begin{acronym}[AWS]
+ \acro{aws}[AWS]{Amazon Web Services}
+\end{acronym}
+\printglossaries
+\label{cha:bibliography}
+%\markboth{Bibliography}{Bibliography}
+%\addcontentsline{toc}{chapter}{Bibliography}
+\nocite{*}
+\printbibliography
+%\printbibliography[heading=offline,filter=offline]
+%\printbibliography[heading=online,filter=online]
+
+\end{document}
