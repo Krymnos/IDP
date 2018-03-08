@@ -73,7 +73,7 @@ public class PipelineComponent {
         // Start server with args.port or default port
         if(argv.length == 0) {
         	// use default values if parameters are not set
-        	gatewayServer server = new gatewayServer(50051, 50052, "localhost", "default", 5);
+        	gatewayServer server = new gatewayServer(50051, 50052, "localhost", "default", 5, args.no_prov);
         	server.setVerbose(args.verbose);
         	server.setNoProv(args.no_prov);
         	server.start();
@@ -105,7 +105,7 @@ public class PipelineComponent {
         	} else {
         		storage_time = args.storageTime;
         	}
-        	gatewayServer server = new gatewayServer(port, -1, "", location, storage_time);
+        	gatewayServer server = new gatewayServer(port, -1, "", location, storage_time, args.no_prov);
         	server.setVerbose(args.verbose);
         	server.setNoProv(args.no_prov);
         	server.start();
@@ -132,7 +132,7 @@ public class PipelineComponent {
         	} else {
         		storage_time = args.storageTime;
         	}
-        	gatewayServer server = new gatewayServer(port, args.port_next, args.host_next, location, storage_time);
+        	gatewayServer server = new gatewayServer(port, args.port_next, args.host_next, location, storage_time, args.no_prov);
         	server.setVerbose(args.verbose);
         	server.setNoProv(args.no_prov);
         	server.start();
@@ -141,7 +141,7 @@ public class PipelineComponent {
         	// args are set
         else {
         	// implement pipeline topology and config parameters
-        	gatewayServer server = new gatewayServer(args.port, args.port_next, args.host_next, args.location, args.storageTime);
+        	gatewayServer server = new gatewayServer(args.port, args.port_next, args.host_next, args.location, args.storageTime, args.no_prov);
 			server.setVerbose(args.verbose);
 			server.setNoProv(args.no_prov);
         	server.start();
@@ -171,6 +171,7 @@ class gatewayServer {
 	public static double receiveCount;
 	public static PrintWriter pw;
 	public boolean no_prov2;
+	public boolean noProv;
 	
 	static TimedAggregationStorage<measurement_message> aggregationStorage;
 	static gatewayServer.pushDataService pushDataService;
@@ -178,12 +179,13 @@ class gatewayServer {
 	static gatewayServer.markAliveTimer markAliveTimer1;
 	private sendReceiveTimer sendReceiveT;
 
-	public gatewayServer(int port, int portNext, String hostNext, String location, int storagetime_m)
+	public gatewayServer(int port, int portNext, String hostNext, String location, int storagetime_m, boolean no_prov)
 			throws IOException, ConfigParseException, SetupException {
 	    this.port = port;
 	    this.portNext = portNext;
 	    this.hostNext = hostNext;
 	    this.location = location;
+	    this.noProv=no_prov;
 	    className = this.getClass().getSimpleName();
 	    dbClient = RedisClient.create("redis://localhost:6379");
 	    dbConnection = dbClient.connect();
@@ -192,7 +194,7 @@ class gatewayServer {
 	    if(dbConnection.isOpen()){
 	    	logger.info("Redis Connection to localhost:6379 was established");
 		}
-	    this.pushDataService = new pushDataService(hostNext, portNext, location, storagetime_m);
+	    this.pushDataService = new pushDataService(hostNext, portNext, location, storagetime_m,noProv );
 	    this.localStorageTimer = new localStorageTimer(storagetime_m);
 	    this.markAliveTimer1 = new markAliveTimer();
 	    this.sendReceiveT = new sendReceiveTimer();
@@ -340,21 +342,31 @@ class gatewayServer {
 		public static double lat;
 		public static double lg;
 		private final String context;
+		private boolean noProv;
 
 	
 		
-		public pushDataService(String hostNext, int portNext, String location, int storagetime_m)
+		public pushDataService(String hostNext, int portNext, String location, int storagetime_m, boolean noProv)
 				throws ConfigParseException, SetupException {
 		
 			this.portNext = portNext;
 		    this.hostNext = hostNext;
 		    this.location = location;
+		    this.noProv = noProv;
 		    
 		    //local storage client init
 		    asyncCommands = dbConnection.async();
-		    pc = ProvenanceContext.getOrCreate();
-		    String[] contextParams = pc.getContextParams();
-		    context = String.join(",", contextParams);
+		    System.out.println(noProv);
+		    if (noProv==false) {
+		    	 pc = ProvenanceContext.getOrCreate();
+		    	 String[] contextParams = pc.getContextParams();
+				 context = String.join(",", contextParams);
+		    }else {
+		    	pc=null;
+		    	context=null;
+		    }
+		   
+		    
 		    appName = this.getClass().getSimpleName() ;
 		    lat=7.772406+(Math.random()*(2.46408));
 		    lg=51.657817+(Math.random()*(2.262556));
@@ -364,14 +376,18 @@ class gatewayServer {
 		public void setVerbose(boolean verbose){
 			this.verbose = verbose;
 		}
+		public boolean getNoProv() {
+			return this.no_prov;
+		}
 		public void setNoProv(boolean no_prov){
 			this.no_prov = no_prov;
 		}
 		public void sendReceiveSet(double sendRate, double receiveRate) {
 			try {
+				if (getNoProv()==false) {
 				this.pc.rate(sendRate, receiveRate);
 				markAliveTimer.markTimer.restart();
-				
+				}
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -379,7 +395,9 @@ class gatewayServer {
 		}
 		public void receiveSet(double receiveRate) {
 			try {
+				if (getNoProv()==false) {
 				this.pc.receiveRate(receiveRate);
+				}
 				markAliveTimer.markTimer.restart();
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
@@ -388,7 +406,9 @@ class gatewayServer {
 		}
 		public void callPcMarkAlive () {
 			//logger.info(".........................................markAlive called");
+			if (getNoProv()==false) {
 	    	this.pc.markAlive();
+			}
 	    }
 
 		@Override

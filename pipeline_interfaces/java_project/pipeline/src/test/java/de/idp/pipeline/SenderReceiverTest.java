@@ -48,10 +48,10 @@ public class SenderReceiverTest extends TestCase
 
     
     //Client test
-	ProvenanceContext pc =ProvenanceContext.getOrCreate();
+	//ProvenanceContext pc =ProvenanceContext.getOrCreate();
 		
 	
-	
+	/*
     gatewayServer gateway_1 = new gatewayServer(50051, 50052, "localhost", "TEL1", 1);
     gateway_1.start();
     
@@ -95,7 +95,7 @@ public class SenderReceiverTest extends TestCase
 	List<String> local_keys = new ArrayList<>();
 	local_keys = commands.keys("*");
 	System.out.println(local_keys);
-	//Assert.assertEquals(12, local_keys.size());
+	//Assert.assertEquals(12, local_keys.size());*/
   }
 
 
