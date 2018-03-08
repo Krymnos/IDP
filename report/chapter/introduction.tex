@@ -21,19 +21,22 @@
 \section{Use Case}
 
 A smart grid is an electrical grid which includes a variety of operational and energy measures including smart meters, smart appliances, renewable energy resources, and energy efficient resources.
-Electronic power conditioning and control of the production and distribution of electricity are important aspects of the smart grid. Providing reliability in smart grids are done using electronic control, metering, and monitoring. 
+Electronic power conditioning and control of the production and distribution of electricity are important aspects of the smart grid. 
+Providing reliability in smart grids are done using electronic control, metering, and monitoring. 
 To motivate our design decisions we are looking at how a potential user would interact with our system. 
 In this chapter we are looking at the Administrators of a small to medium sized smart grid. 
-Their main goals are to find failures in near-realtime and to be able to analyze these failures manually. Furthermore they want to have data available for offline analysis to compare overall and individual component performances over time. 
 
+Their main goals are to find failures in near-realtime and to be able to analyze these failures manually. 
+Furthermore they want to have data available for offline analysis to compare overall and individual component performances over time. 
+The components that are most relevant for this purpose are the gateway nodes that relay and potentially alter the messages produced by the sensors.
 
-\subsection{User Story}
+\vspace{3mm}
 
 The system administrators have various tools available for monitoring their system. 
 To detect failures heartbeat messages can be implemented, to trace latencies of messages existing tracing systems can be deployed and debugging and logging tools can be used to capture potentially relevant information for manual as well as automatic analysis.
 However, a combined and more specialized solution has the potential to provide more value.
 
-\subsubsection{Problems}
+\subsection{Problems}
 
 The administrators are facing the following main challenges:
 
@@ -43,18 +46,55 @@ The administrators are facing the following main challenges:
   \item Not all Members of the team have a computer science Background. A simplified interface for manual tasks is required.
 \end{itemize}
 
-%\subsubsection{}
+%\subsubsection{Value Proposition}
 
-\subsubsection{Value Proposition}
+%Here is an overview of the features our system provides. Each will be explained in more detail in the following Example section.
 
-Here is an overview of the features our system provides. Each will be explained in more detail in the following Example section.
+%\begin{itemize}
+%  \item Integrated solution: Only the gathering of context information has to be implemented on the pipeline level, then the provenance components will take care of data transfer and storage.
+%  \item Node Health Monitoring through heartbeat messages and send/receive rates.
+%  \item Direct queries as well as an simplified interface are available.
+%\end{itemize}
 
+\subsection{Example Workflows}
+
+The following examples are written as user stories and intended to define what the system administrator team is expecting from the system.
+
+\subsubsection{Installation}
 \begin{itemize}
-  \item Integrated solution: Only the gathering of context information has to be implemented on the pipeline level, then the provenance components will take care of data transfer and storage.
-  \item Node Health Monitoring through heartbeat messages and send/receive rates.
-  \item Direct queries as well as an simplified interface are available.
+  \item The provenance deamon has to be installed on all nodes that are to be tracked
+  \item For context parameters such as "Line of Code" the existing code running on the gateways needs to be altered to expose such information via the provenance api.
+  \item the Database, Backend and Frontend Services can be installed on any server
 \end{itemize}
 
-\subsubsection{Example Situations}
-TODO
-Basically the idea is to repeat what was planned for the live demo
+\subsubsection{Monitoring}
+\begin{itemize}
+  \item The user has a visual overview of all nodes that are part of the grid.
+  \item The overview provides information on node health based on heartbeat messages and send/receive rates
+  \item Changes in a node's health are signaled through changes in colors:
+	\begin{itemize}
+	  \item Green: Good health is inferred from recent messages.
+	  \item Yellow: Possible problem when node takes longer to respond to messages (Default 5 sec)
+	  \item Red: A failure is confirmed or the node has not responded after >10 sec.
+	\end{itemize}
+\end{itemize}
+
+\subsubsection{Failure Scenarios}
+\begin{itemize}
+  \item Node Failure: If a node does not react to messages from its neighbours, including heartbeat messages, it is assumed that the whole node has failed. 
+  \item Channel Failure: If heartbeat messages reveal that two nodes are healthy, but messages are not delivered between them, a problem with the network link can be inferred.
+  \item Pipeline Deamon: If the process responsible for relaying sensor messages is unresponsive, this information is propagated through heartbeat messages.
+  \item Provenance Deamon: If the process responsible for capturing and sending the provenance information is unresponsive, it is captured in the next heartbeat message.
+\end{itemize}
+
+\subsubsection{Analysis}
+\begin{itemize}
+  \item Through the UI the user can click on a node to see messages that have passed recently.
+  \item for each message, provenance data is visible in the UI or as a JSON download.
+  \item when looking for specific information the user can also use the UI query tool (e.g. find message based on ID).
+  \item when a failure occurs the user can look at the information of the last messages that passed 
+  \item for larger queries like when comparing system wide performance for a given time period, the database should be queried directly.
+\end{itemize}
+
+Once an issue is identified, it is assumed that the users will use their own tools and possibly physical access to solve them.
+
