@@ -586,7 +586,7 @@ class gatewayServer {
 							 long sendTime2= System.currentTimeMillis();
 							 for (int i=0; i<gDataList.size();i++) {
 								 Grid_data message = gDataList.get(i);
-								 Grid_data newMessage = Grid_data.newBuilder().setMeasurement(message.getMeasurement()).setProvId(message.getProvId()+", " + sendTime2).setContext(context).build();
+								 Grid_data newMessage = Grid_data.newBuilder().setMeasurement(message.getMeasurement()).setProvId(message.getProvId()+", " + sendTime2).build();
 								 gDataList.set(i, newMessage);
 							 }
 							 
@@ -742,7 +742,7 @@ class gatewayServer {
 									  //sendTime= new Date(sendTime);
 									  for (int i=0; i<gDataList.size();i++) {
 										  Grid_data message = gDataList.get(i);
-										  Grid_data newMessage = Grid_data.newBuilder().setMeasurement(message.getMeasurement()).setProvId(message.getProvId()+", " + sendTime2).setContext(context).build();
+										  Grid_data newMessage = Grid_data.newBuilder().setMeasurement(message.getMeasurement()).setProvId(message.getProvId()+", " + sendTime2).build();
 										  gDataList.set(i, newMessage);
 									  }
 								  }
