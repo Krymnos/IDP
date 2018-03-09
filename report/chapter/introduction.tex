@@ -15,7 +15,44 @@
 
 \section{Project Organization}
 
+When starting this project as a team of equal students, the distribution of tasks was not trivial as we first had to come up with a problem, use-case and a general vision of what we wanted to achieve. 
+Therefore initially everybody had to figure that out for themselves, before discussing it in the group and coming to an agreement.
 
+After making these high-level decisions, tasked were started to be distributed based on personal preferences. 
+The granularity of tasks was evolving over time, though quite differently for different tasks.
+For example, it became clear at the beginning that we needed a simulation of a smart grid on which we could test our prototype, which resulted in rather precise implementation tasks early on. 
+However, the design of the data model took more research and was also revised repeatedly, so that the first fine grained implementation tasks were started some weeks later.
+
+After the first five weeks a scrumboard was introduced \cite{zenhub}. 
+Before that, regular github issues were used to define task distribution. 
+However, with ever more fine grained and interconnected implementation tasks, it became harder to keep the overview. 
+The scrumboard therefore helped to keep a better overview and also subjectively increased the teams performance, especially once we started to set deadlines on a weekly basis.
+
+The Following table was set before the midterm presentation to define responsibilities, especially when it comes to questions regarding the components from within the team as well as from outsiders.
+
+
+\renewcommand{\arraystretch}{1.4}
+\begin{center}
+ \begin{tabular}{| m{18em} m{10em} |} 
+ \hline
+ Responsibility & Name  \\
+ \hline\hline
+ IoT Pipeline & Kevin \\ 
+ \hline
+Data Model + Provenance Collector & Mukrram \\
+ \hline
+ Backend & Vinoth, Mukrram \\
+ \hline
+ Databases & Talal \\
+ \hline
+ Frontend & Darshan \\ 
+ \hline
+ Deployment \& Testing & Gerrit \\
+ \hline
+Project Management & Ron \\
+ \hline
+\end{tabular}
+\end{center}
 
 
 \section{Use Case}
@@ -43,7 +80,9 @@ The administrators are facing the following main challenges:
 \begin{itemize}
   \item Information on node health should be available as fast as possible.
   \item Data for debugging should be available at one location independent of the grid.
-  \item Not all Members of the team have a computer science Background. A simplified interface for manual tasks is required.
+  \item Not all Members of the team have the same computer science Background. A simplified interface for manual tasks is required.
+  \item Hardware Resources on the Grid are limited. 
+  \item The administrators need to know, how much Overhead additional monitoring tools will introduce on the gateways.
 \end{itemize}
 
 %\subsubsection{Value Proposition}
