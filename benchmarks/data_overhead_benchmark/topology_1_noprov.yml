@@ -1,0 +1,21 @@
+version: '3'
+services:
+    source:
+        image: cloudproto/sensor:latest
+        environment:
+            - SENSOR_PARAMETERS=-sourceFolder data/20170210 -frequency 1000 -targetAddress gateway:50051 -targetType grpc-pipeline
+            - STARTUP_DELAY=60
+        logging:
+          driver: "none"
+    gateway:
+        image: cloudproto/pipeline_component:latest
+        environment:
+            - ARGUMENTS=--port 50051 --host_next endpoint --port_next 50051 --storagetime 100 --no_prov
+        logging:
+          driver: "none"
+    endpoint:
+        image: cloudproto/pipeline_component:latest
+        environment:
+            - ARGUMENTS=--port 50051 --storagetime 100 --no_prov
+        logging:
+          driver: "none"
