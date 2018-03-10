@@ -211,7 +211,7 @@ class gatewayServer {
 		this.no_prov2 = no_prov;
 		if(no_prov2) {
 		    try {
-				pw = new PrintWriter(new File("/mnt/timestamp.csv"));
+				pw = new PrintWriter(new File("/root/timestamp.csv"));
 			} catch (FileNotFoundException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
