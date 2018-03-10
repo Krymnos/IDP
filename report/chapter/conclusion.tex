@@ -1,0 +1,44 @@
+
+The following section summarizes the outcome of the Cloud Prototyping project, our approach to solve the task and an analysis of the results. Moreover a motivation for future work is presented.
+\subsection{What was our task?}
+The projects general scope was to create a provenance system solution in an IoT smart grid scenario. In addition to that a data model for the provenance data that should be captured for the given scenario had to be developed. The data model should be applicable for the given scenario and fit to our use case. More over a pipeline prototype for the delivery of sensor measurement values had to be implemented to test and evaluate the proposed provenance system.
+For the purpose of narrowing down the potential use case of such a system a detailed use case had to be identified and described. The use case of node failure detection was chosen.
+The following will therefore revisit our approach of solving the presented task.
+\subsection{What was our approach/ How did we solved it?}
+In order to be able to solve the given task, the idea of data provenance and existing provenance systems were studied thoroughly. An initial use case of node failure detection was developed to be able to classify and examine existing systems. 
+
+The lack in number of already implemented data provenance systems, especially in the use case scenario of smart grids made it inevitable to implement a system on our own. In addition to existing systems being studied, existing tracing systems like Opentracing were examined. But the features provided by tracing systems do not cover the features needed to be applicable in the given scenario. Following the finalization to implement our own system, the use case and the corresponding provenance data model was defined in detail. As explained different types of failures were taken into account. Based on the research results, the use case defined and the data model created the decision to build up the envisioned provenance system for the IoT smart grid scenario from scratch was made. 
+
+Suitable technologies to be used for the system had to be evaluated and the scope of the prototype implementation had to be defined. It was decided, that the prototype implementation should include a user interface to interact with the system and implement the provenance system as API, to enhance the ease of use. In addition to that a pipeline should be implemented to provide a way to simulate the smart grid setup scenario and to be able to evaluate the proposed provenance system. To deploy and benchmark our system a deployment using Amazon Web Services was used. 
+
+The system and data model design decisions made, were thoroughly explained throughout this report. Also the benchmark results were presented and described in detail. With that being the basis the following section provides a detailed examination of the strengths and weaknesses of our approach and provides the motivation for the future work.
+\subsection{What are the strengths and weaknesses of our approach?}
+The design decisions made throughout the project obviously influence the performance of our system. As a result to the work done in the project an examination of the strengths and weaknesses of the proposed prototype implementation is given. 
+Since the implementation of the presented system is in the stage of a prototype implementation the room for improvement is obvious.
+
+One identified weakness of the current implementation arises in the network overhead of the system. In the IoT scenario it is possible that due to the limited resources present the system generates to much overhead.
+
+But nevertheless our provenance system has its strengths. 
+The implemented user interface provides a decent level of abstraction for the user of our system. The user does not have to know all the details needed to understand database queries. Node health and additional information, like the number of messages sent and received are visualized. But additionally it also provides full query abilities through the introduction of the provenance query language and the ability to use it with the UI. Also the easy integration of the provenance system through the design as API, proves to be a strength. This way programmers seeking to integrate the provenance system into their pipeline can achieve it without knowing every detail of the provenance system implementation. Another strength is the configurability of the Provenance system and the fine grained control of what parameters to capture, because the user can limit the overhead impact of the system and adapt the parameters to specific user needs.
+
+
+%	--> time of error detection
+
+%Performance:
+%	--> good latency/ throughput?
+
+%Weaknesses:
+%	--> overhead?
+%    --> latency?
+%    --> error detection time?
+    
+
+
+\subsection{How can we verify this with our benchmark results?}
+The analyzed strengths and weaknesses can also be verified by the benchmark results. The network overhead benchmark showed the weakness of an up to 5 times increase in total amount of data sent over the network. even with minimal configuration a 2 times increase in total amount of data was experienced.  
+
+
+\subsection{Future Work}
+As identified, further improvements to the system can be made to improve on the weak points of the system. Especially the overhead of the system should be further improved. More over the development of additional features and providing more provenance parameters, to provide support for additional use cases. should be considered. The integration of additional types of databases to store the provenance data could be provided. 
+
+
