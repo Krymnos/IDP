@@ -8,7 +8,7 @@
 
 ## provenance configurations
 TOPOLOGY_FILES_WITH_PROVENANCE=("topology_0_prov.yml" "topology_1_prov.yml" "topology_2_prov.yml")
-TOPOLOGY_FILES_WITHOUT_PROVENANCE=("topology_0_prov.yml" "topology_1_noprov.yml" "topology_2_noprov.yml")
+TOPOLOGY_FILES_WITHOUT_PROVENANCE=("topology_0_noprov.yml" "topology_1_noprov.yml" "topology_2_noprov.yml")
 
 PROV_BUFFER_SIZES=(1 5 10)
 PROV_METRICS=("meterid,metricid,loc,line,class,app,ctime,stime,rtime" "meterid,ctime" "metricid,ctime" "loc,ctime" "class,ctime" "app,ctime" "ctime" "stime,ctime" "rtime,ctime")
