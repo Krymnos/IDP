@@ -1,0 +1,38 @@
+version: '3'
+services:
+    cassandra:
+        image: cassandra:latest
+    source:
+        image: cloudproto/sensor:latest
+        environment:
+            - SENSOR_PARAMETERS=-sourceFolder data/20170210 -frequency 1000 -targetAddress gateway:50051 -targetType grpc-pipeline
+            - STARTUP_DELAY=60
+        logging:
+          driver: "none"
+    gateway:
+        image: cloudproto/pipeline_component:latest
+        environment:
+            - STARTUP_DELAY=40
+            - CASSANDRA_HOST=cassandra
+            - NODE_ID=000001
+            - SUCCESSOR=000002
+            - NODE_NAME=gateway
+            - ARGUMENTS=--port 50051 --host_next endpoint --port_next 50051 --storagetime 100
+            - METRICS=meterid,metricid,loc,line,class,app,ctime,stime,rtime
+            - BUFFER_CAPACITY=1
+        logging:
+          driver: "none"
+    endpoint:
+        image: cloudproto/pipeline_component:latest
+        depends_on:
+            - cassandra
+        environment:
+            - STARTUP_DELAY=30
+            - CASSANDRA_HOST=cassandra
+            - ARGUMENTS=--port 50051 --storagetime 100
+            - NODE_ID=000002
+            - NODE_NAME=endpoint
+            - METRICS=meterid,metricid,loc,line,class,app,ctime,stime,rtime
+            - BUFFER_CAPACITY=1
+        logging:
+          driver: "none"
