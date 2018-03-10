@@ -1,1 +1,139 @@
 \chapter{Introduction}
+
+
+
+
+\section{Basics of Provenance Systems}
+
+
+
+
+\section{Related Work}
+
+
+
+
+\section{Project Organization}
+
+When starting this project as a team of equal students, the distribution of tasks was not trivial as we first had to come up with a problem, use-case and a general vision of what we wanted to achieve. 
+Therefore initially everybody had to figure that out for themselves, before discussing it in the group and coming to an agreement.
+
+After making these high-level decisions, tasked were started to be distributed based on personal preferences. 
+The granularity of tasks was evolving over time, though quite differently for different tasks.
+For example, it became clear at the beginning that we needed a simulation of a smart grid on which we could test our prototype, which resulted in rather precise implementation tasks early on. 
+However, the design of the data model took more research and was also revised repeatedly, so that the first fine grained implementation tasks were started some weeks later.
+
+After the first five weeks a scrumboard was introduced \cite{zenhub}. 
+Before that, regular github issues were used to define task distribution. 
+However, with ever more fine grained and interconnected implementation tasks, it became harder to keep the overview. 
+The scrumboard therefore helped to keep a better overview and also subjectively increased the teams performance, especially once we started to set deadlines on a weekly basis.
+
+The Following table was set before the midterm presentation to define responsibilities, especially when it comes to questions regarding the components from within the team as well as from outsiders.
+
+
+\renewcommand{\arraystretch}{1.4}
+\begin{center}
+ \begin{tabular}{| m{18em} m{10em} |} 
+ \hline
+ Responsibility & Name  \\
+ \hline\hline
+ IoT Pipeline & Kevin \\ 
+ \hline
+Data Model + Provenance Collector & Mukrram \\
+ \hline
+ Backend & Vinoth, Mukrram \\
+ \hline
+ Databases & Talal \\
+ \hline
+ Frontend & Darshan \\ 
+ \hline
+ Deployment \& Testing & Gerrit \\
+ \hline
+Project Management & Ron \\
+ \hline
+\end{tabular}
+\end{center}
+
+
+\section{Use Case}
+
+A smart grid is an electrical grid which includes a variety of operational and energy measures including smart meters, smart appliances, renewable energy resources, and energy efficient resources.
+Electronic power conditioning and control of the production and distribution of electricity are important aspects of the smart grid. 
+Providing reliability in smart grids are done using electronic control, metering, and monitoring. 
+To motivate our design decisions we are looking at how a potential user would interact with our system. 
+In this chapter we are looking at the Administrators of a small to medium sized smart grid. 
+
+Their main goals are to find failures in near-realtime and to be able to analyze these failures manually. 
+Furthermore they want to have data available for offline analysis to compare overall and individual component performances over time. 
+The components that are most relevant for this purpose are the gateway nodes that relay and potentially alter the messages produced by the sensors.
+
+\vspace{3mm}
+
+The system administrators have various tools available for monitoring their system. 
+To detect failures heartbeat messages can be implemented, to trace latencies of messages existing tracing systems can be deployed and debugging and logging tools can be used to capture potentially relevant information for manual as well as automatic analysis.
+However, a combined and more specialized solution has the potential to provide more value.
+
+\subsection{Problems}
+
+The administrators are facing the following main challenges:
+
+\begin{itemize}
+  \item Information on node health should be available as fast as possible.
+  \item Data for debugging should be available at one location independent of the grid.
+  \item Not all Members of the team have the same computer science Background. A simplified interface for manual tasks is required.
+  \item Hardware Resources on the Grid are limited. 
+  \item The administrators need to know, how much Overhead additional monitoring tools will introduce on the gateways.
+\end{itemize}
+
+%\subsubsection{Value Proposition}
+
+%Here is an overview of the features our system provides. Each will be explained in more detail in the following Example section.
+
+%\begin{itemize}
+%  \item Integrated solution: Only the gathering of context information has to be implemented on the pipeline level, then the provenance components will take care of data transfer and storage.
+%  \item Node Health Monitoring through heartbeat messages and send/receive rates.
+%  \item Direct queries as well as an simplified interface are available.
+%\end{itemize}
+
+\subsection{Example Workflows}
+
+The following examples are written as user stories and intended to define what the system administrator team is expecting from the system.
+
+\subsubsection{Installation}
+\begin{itemize}
+  \item The provenance deamon has to be installed on all nodes that are to be tracked
+  \item For context parameters such as "Line of Code" the existing code running on the gateways needs to be altered to expose such information via the provenance api.
+  \item the Database, Backend and Frontend Services can be installed on any server
+\end{itemize}
+
+\subsubsection{Monitoring}
+\begin{itemize}
+  \item The user has a visual overview of all nodes that are part of the grid.
+  \item The overview provides information on node health based on heartbeat messages and send/receive rates
+  \item Changes in a node's health are signaled through changes in colors:
+	\begin{itemize}
+	  \item Green: Good health is inferred from recent messages.
+	  \item Yellow: Possible problem when node takes longer to respond to messages (Default 5 sec)
+	  \item Red: A failure is confirmed or the node has not responded after >10 sec.
+	\end{itemize}
+\end{itemize}
+
+\subsubsection{Failure Scenarios}
+\begin{itemize}
+  \item Node Failure: If a node does not react to messages from its neighbours, including heartbeat messages, it is assumed that the whole node has failed. 
+  \item Channel Failure: If heartbeat messages reveal that two nodes are healthy, but messages are not delivered between them, a problem with the network link can be inferred.
+  \item Pipeline Deamon: If the process responsible for relaying sensor messages is unresponsive, this information is propagated through heartbeat messages.
+  \item Provenance Deamon: If the process responsible for capturing and sending the provenance information is unresponsive, it is captured in the next heartbeat message.
+\end{itemize}
+
+\subsubsection{Analysis}
+\begin{itemize}
+  \item Through the UI the user can click on a node to see messages that have passed recently.
+  \item for each message, provenance data is visible in the UI or as a JSON download.
+  \item when looking for specific information the user can also use the UI query tool (e.g. find message based on ID).
+  \item when a failure occurs the user can look at the information of the last messages that passed 
+  \item for larger queries like when comparing system wide performance for a given time period, the database should be queried directly.
+\end{itemize}
+
+Once an issue is identified, it is assumed that the users will use their own tools and possibly physical access to solve them.
+
