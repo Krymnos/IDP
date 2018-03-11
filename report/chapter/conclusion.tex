@@ -16,7 +16,7 @@ The system and data model design decisions made, were thoroughly explained throu
 The design decisions made throughout the project obviously influence the performance of our system. As a result to the work done in the project an examination of the strengths and weaknesses of the proposed prototype implementation is given. 
 Since the implementation of the presented system is in the stage of a prototype implementation the room for improvement is obvious.
 
-One identified weakness of the current implementation arises in the network overhead of the system. In the IoT scenario it is possible that due to the limited resources present the system generates to much overhead.
+One identified weakness of the current implementation arises in the network overhead of the system. In the IoT scenario it is possible that due to the limited resources present the system generates to much overhead. The network overhead benchmark showed the weakness of an up to 5 times increase in total amount of data sent over the network. Even with minimal context configuration a 2 times increase in total amount of data was experienced.
 
 But nevertheless our provenance system has its strengths. 
 The implemented user interface provides a decent level of abstraction for the user of our system. The user does not have to know all the details needed to understand database queries. Node health and additional information, like the number of messages sent and received are visualized. But additionally it also provides full query abilities through the introduction of the provenance query language and the ability to use it with the UI. Also the easy integration of the provenance system through the design as API, proves to be a strength. This way programmers seeking to integrate the provenance system into their pipeline can achieve it without knowing every detail of the provenance system implementation. Another strength is the configurability of the Provenance system and the fine grained control of what parameters to capture, because the user can limit the overhead impact of the system and adapt the parameters to specific user needs.
@@ -33,12 +33,7 @@ The implemented user interface provides a decent level of abstraction for the us
 %    --> error detection time?
     
 
-
-\subsection{How can we verify this with our benchmark results?}
-The analyzed strengths and weaknesses can also be verified by the benchmark results. The network overhead benchmark showed the weakness of an up to 5 times increase in total amount of data sent over the network. even with minimal configuration a 2 times increase in total amount of data was experienced.  
-
-
 \subsection{Future Work}
-As identified, further improvements to the system can be made to improve on the weak points of the system. Especially the overhead of the system should be further improved. More over the development of additional features and providing more provenance parameters, to provide support for additional use cases. should be considered. The integration of additional types of databases to store the provenance data could be provided. 
+As identified, further improvements to the system can be made to improve on the weak points of the system. Especially the overhead of the system should be further improved. Here it could be a possible approach to evaluate other communication technologies. More over the development of additional features, extending the current data model to provide more provenance parameters and therefor provide support for additional use cases should be considered. The integration of additional types of databases to store the provenance data could be provided, as well. 
 
 
