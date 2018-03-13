@@ -46,6 +46,12 @@ Provenance system should consider the finer granularity in which it captures the
 
 \section{Project Organization}
 
+The project was started as part of the Cloud Prototyping course of TU Berlin in October 2017. 
+With a team of 7 students that did not know each other before, it was necessary to organize the distribution of tasks and use of tools internally. 
+This organization was not set beforehand, but evolved continuously over the course of this semester.
+
+\subsection{Task distribution}
+
 When starting this project as a team of equal students, the distribution of tasks was not trivial as we first had to come up with a problem, use-case and a general vision of what we wanted to achieve. 
 Therefore initially everybody had to figure that out for themselves, before discussing it in the group and coming to an agreement.
 
@@ -59,7 +65,7 @@ Before that, regular github issues were used to define task distribution.
 However, with ever more fine grained and interconnected implementation tasks, it became harder to keep the overview. 
 The scrumboard therefore helped to keep a better overview and also subjectively increased the teams performance, especially once we started to set deadlines on a weekly basis.
 
-The Following table was set before the midterm presentation to define responsibilities, especially when it comes to questions regarding the components from within the team as well as from outsiders.
+The Following table \ref{table:responsibilities} was set before the midterm presentation to define responsibilities, especially when it comes to questions regarding the components from within the team as well as from outsiders.
 
 
 \renewcommand{\arraystretch}{1.4}
@@ -83,7 +89,26 @@ Data Model + Provenance Collector & Mukrram \\
 Project Management & Ron \\
  \hline
 \end{tabular}
+\caption{Distribution of Responsibilities}
+\label{table:responsibilities}
 \end{center}
+
+\subsection{Tools}
+
+In order to work effectively and potentially simultaneously as a team of 7 members, the use of modern organization tools was necessary. 
+The use of GitHub issues and the scrumboard was mentioned already above. 
+The use of Slack for internal communication and GitHub for code repositories is further explained below. 
+Further tools that aided in code development such Travis CI for continuous integration can be found in the implementation chapter.
+
+\subsubsection{Slack}
+
+Slack had been chosen as the main tool for communication, since it is a very commonly used tool for team organization and all team members were already familiar with it. 
+
+Initially only a "general" channel for discussions and a "links" channel for an overview of important links were created.
+Next integrations for GitHub were added, which allowed to track commits and issues for each repository in a separate channel.
+Also over time, additional channels were created for more specific tasks, that allowed to keep conversations about different topics (e.g. organization of meetings vs. implementation issues with a certain component) separate, leading to a better overview and less "noise" for members not involved in a specific issue.
+
+\subsection{This Report}
 
 
 \section{Use Case}
@@ -132,7 +157,7 @@ The following examples are written as user stories and intended to define what t
 
 \subsubsection{Installation}
 \begin{itemize}
-  \item The provenance deamon has to be installed on all nodes that are to be tracked
+  \item The provenance daemon has to be installed on all nodes that are to be tracked
   \item For context parameters such as "Line of Code" the existing code running on the gateways needs to be altered to expose such information via the provenance api.
   \item the Database, Backend and Frontend Services can be installed on any server
 \end{itemize}
@@ -153,8 +178,8 @@ The following examples are written as user stories and intended to define what t
 \begin{itemize}
   \item Node Failure: If a node does not react to messages from its neighbours, including heartbeat messages, it is assumed that the whole node has failed. 
   \item Channel Failure: If heartbeat messages reveal that two nodes are healthy, but messages are not delivered between them, a problem with the network link can be inferred.
-  \item Pipeline Deamon: If the process responsible for relaying sensor messages is unresponsive, this information is propagated through heartbeat messages.
-  \item Provenance Deamon: If the process responsible for capturing and sending the provenance information is unresponsive, it is captured in the next heartbeat message.
+  \item Pipeline Daemon: If the process responsible for relaying sensor messages is unresponsive, this information is propagated through heartbeat messages.
+  \item Provenance Daemon: If the process responsible for capturing and sending the provenance information is unresponsive, it is captured in the next heartbeat message.
 \end{itemize}
 
 \subsubsection{Analysis}
