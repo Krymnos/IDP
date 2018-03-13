@@ -68,8 +68,7 @@ to travel from Gateway to the Endpoint labeled as Hop:1.
 From the diagram \ref{fig:twotopology_latency}, its is clearly shown that the message propagating without provenance information has the minimum latency as the size of the message is small. There is the clear difference in the latency when using full context compare to using six or four context setting for running the provenance system. Mean latency for Two Node Topology\ref{fig:two_topo} using six contexts or four context does not depict a large difference, the reason behind this could be a small difference in message size.
 
 
-\subsection*{Triangle Topology}
-The idea behind using this topology for the next benchmark is that to check if there is any fluctuation or changes in the reading when adding another gateway to send data point to the endpoint. This will help us to check how the provenance system performs in case of increasing node vertically to the architecture. The Triangle topology consists of two sensor nodes which send the measurements to two different gateways. These gateways (Gateway A, B) push the data to a common Endpoint.
+\subsection*{Triangle Topology}The idea behind using this topology for the next benchmark is that to check if there is any fluctuation or changes in the reading when adding another gateway to send data point to the endpoint. This will help us to check how the provenance system performs in case of increasing node vertically to the architecture. The Triangle topology consists of two sensor nodes which send the measurements to two different gateways. These gateways (Gateway A, B) push the data to a common Endpoint.
 
 \begin{figure}[H]
 	\center
@@ -154,7 +153,6 @@ The diagram \ref{fig:forktopo_latency} shows that the mean latency for Hop:1 and
 As seen from the benchmark run with a different configuration, it is clear that using less context parameter with the provenance system result in less latency overhead. Overall, it depends on the user of the provenance system which parameter are useful for their particular case and decides upon the setting of metric to track or not. Using Six context parameter or four context parameter does not have any huge difference thus it would be recommended to use six context parameter as used in the benchmark. It also seen from the benchmarks results that the mean node latency for each hop remains consistent with no drastic changes when increasing the hops in the pipeline design.
 
 
-\pagebreak
 \paragraph*{Changing the Buffer Capacity}
 After analysis the effect of changing context parameter setting of the provenance system we need to see the effect of buffer capacity on the system in term of latency so that we know the capacity at which the system ingest data with minimal overhead. In this we want to know that if the data ingestion rate of the provenance system effect the node latency or not.
 Everything was kept same as in the test setup \ref{testsetup} beside the Buffer Capacity : (10,50,100) running only on Fork Node Topology\ref{fig:fork_topo}.
@@ -163,7 +161,7 @@ Everything was kept same as in the test setup \ref{testsetup} beside the Buffer 
 	\center
 	\includegraphics[width=\textwidth]{figures/buffer-fork.PNG}
 	\caption{Latency for Fork Topology with Full Context}
-	\label{fig:forktopo_latency_buffer}
+	\label{fig:forktopo_latency_buffer_bar}
 \end{figure}
 
 \begin{figure}[H]
