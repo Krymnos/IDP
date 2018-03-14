@@ -31,13 +31,13 @@ We will be querying the Node table to get the list of nodes. Once we got the nod
 
 Once we get the rows, if heartbeat rows are available for the node then we can be sure that the node is active. We also need to perform an additional check to find out if the timestamp field is less than 30 seconds old. Because each node will be sending the heartbeat messages every 30 seconds and we need to be sure that the node is active currently. We will store the timestamp value each time in the benchmark and compare it next time with the previous value to find out if the heartbeat message is the latest one.
 
-\subsubsection{result}
+\subsubsection{Result}
 
 Following graph has been generated from the results obtained,
 
 \begin{figure}[H]
 	\center
-	\includegraphics[width=0.5\textwidth]{figures/benchmark_node.png}
+	\includegraphics[width=1\textwidth]{figures/benchmark_node.png}
 	\caption{Node Failure Detection}
 	\label{fig:benchmark_node}
 \end{figure}
@@ -72,13 +72,13 @@ Once we get the rows, if heartbeat rows are available for the node and its neigh
 The next check we need to perform is to find if the channel field in the heartbeat table row with the successor id contains the node id.
 If the node id is present then we can conclude that channel link is also active. We also need to perform an additional check to find out if the channel field is less than 30 seconds old. Because each node will be sending the heartbeat messages every 30 seconds and we need to be sure that the channel is active currently.
 
-\subsubsection{result}
+\subsubsection{Result}
 
 Following graph has been generated from the results obtained,
 
 \begin{figure}[H]
 	\center
-	\includegraphics[width=0.5\textwidth]{figures/benchmark_link.png}
+	\includegraphics[width=1\textwidth]{figures/benchmark_link.png}
 	\caption{Link Failure Detection}
 	\label{fig:benchmark_link}
 \end{figure}
@@ -104,13 +104,13 @@ Method to simulate a pipeline daemon failure is to kill the container(node) itse
 We will be querying the NODE table to get the list of nodes that are running the pipeline daemon. Once we got the node id for a particular node, then we query the heartbeat table to get the rows with that id. 
 Once we get the rows, if heartbeat rows are available for the node then we can be sure that the pipeline daemon is active. We also need to perform an additional check to find out if the timestamp field is less than 30 seconds old. Because each pipeline daemon will be sending the heartbeat messages every 30 seconds and we need to be sure that the pipeline daemon is active currently. We will store the timestamp value each time in the benchmark and compare it next time with the previous value to find out if the heartbeat message is the latest one.
 
-\subsubsection{result}
+\subsubsection{Result}
 
 Following graph has been generated from the results obtained,
 
 \begin{figure}[H]
 	\center
-	\includegraphics[width=0.5\textwidth]{figures/benchmark_pipeline.png}
+	\includegraphics[width=1\textwidth]{figures/benchmark_pipeline.png}
 	\caption{Pipeline API Daemon Failure Detection}
 	\label{fig:benchmark_pipeline}
 \end{figure}
@@ -135,13 +135,13 @@ Once the deployment is done and docker containers are started, workload generato
 
 We will be querying the Node table to get the list of nodes. Once we got the node id for a particular node, then we query the PROVENANCETABLE table to get the rows with that id. Initially we will mark the provenance daemon active if we found rows greater than 0 and then we will query the PROVENANCETABLE every 10 seconds delay and again check the count. Previous counts will be stored throughout the benchmark. Provenance Daemon will be marked as active if the count has been increased compared to the previous count value. If the count remains unchanged then Provenance daemon will be marked as failed.
 
-\subsubsection{result}
+\subsubsection{Result}
 
 Following graph has been generated from the results obtained,
 
 \begin{figure}[H]
 	\center
-	\includegraphics[width=0.5\textwidth]{figures/benchmark_provenance.png}
+	\includegraphics[width=1\textwidth]{figures/benchmark_provenance.png}
 	\caption{Provenance API Daemon Failure Detection}
 	\label{fig:benchmark_provenance}
 \end{figure}
