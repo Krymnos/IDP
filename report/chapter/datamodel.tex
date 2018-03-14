@@ -20,7 +20,7 @@ PROV-DM is a refinement of OPM and aims at covering a broader range of applicati
 	\item A simple annotation mechanism.
 \end{enumerate}
 
-\subsection{Need for new Data mode}
+\subsection{Need for new Data Model}
 OPM and PROV-DM are quite generic and adopt a largely document-centric view that is centered on expressing actions performed on documents and the causal relationships between such actions while data provenance for IoT systems requires more focus on data exchanged.
 
 \subsection{New Data Model}
@@ -62,14 +62,14 @@ data points as input data points(IDP). A data point's IDP is a list of unique id
 \end{figure}
 We chose two to three specific metrics for each of the above-mentioned context parameters based on our use-cases and these metrics are listed below  (cf. \ref{idpDataModelContext}):
 		\begin{itemize}
-			\item Node/Machine  identifier
-			\item DP creation time
-			\item DP send time
-			\item DP receive time
-			\item Application name
-			\item Class name
-			\item Location
-			\item Line of code 
+			\item Node/Machine  identifier - An identity of the physical node.
+			\item Creation time - In the case when a node is performing some aggregation and not simply forwarding data values, creation time is the time when that data value is generated.
+			\item Send time - Time, when a particular data value is forwarded to next nodes.
+			\item Receive time - Time, when a particular data value is received/captured from the previous node or from the sensor.
+			\item Application name - An application which is responsible for the creation of data value.
+			\item Class name - A class which is responsible for the creation of data value.
+			\item Location - The physical location of the node, where a data value got created.
+			\item Line of code - The line number of the code that generated a particular data value.
 			\item health status
 				\begin{itemize}
 					\item Node/Machine
@@ -78,7 +78,7 @@ We chose two to three specific metrics for each of the above-mentioned context p
 					\item Pipeline Daemon
 				\end{itemize}		
 		\end{itemize}
-We categorize these metrics into two main categories: core metrics and use-case specific metrics. Node/Machine identifier, DP creation time, DP send time, DP receive time and Location are the core metrics of our provenance system. All other metrics are use-case specific: Application name, class name and code line number are for debugging and tracing use-case while health status is for error detection use-case.
+We categorize these metrics into two main categories: core metrics and use-case specific metrics. Node/Machine identifier, Creation time, Send time, Receive time and Location are the core metrics of our provenance system. All other metrics are use-case specific: Application name, class name and code line number are for debugging and tracing use-case while health status is for error detection use-case.
 
 \begin{figure}[h]
 \centering
@@ -86,7 +86,7 @@ We categorize these metrics into two main categories: core metrics and use-case 
 \caption{Use-case specific Data Model Context}
 \label{idpDataModelContext}
 \end{figure}
-We present a visual (cf. \ref{dataModel}) as well as structured representation (e.g., JSON) of our data model below:
+We present a visual (cf. \ref{dataModel}) representation of our data model,  where the circle represents a particular provenance data point. The oval inside the circle represents the context in which a particular data value was created and the inner rectangle tells about the set of data values along with the type of transformation/aggregation that caused the creation of new data value. A structured representation (e.g., JSON) is depicted below:
 
 \begin{itemize}			
 			\item Example: 
