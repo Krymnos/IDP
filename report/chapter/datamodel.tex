@@ -1,4 +1,5 @@
 \section{Data Provenance Model}
+In this section, we shortly explain some of the existing provenance data models and the need for a new data model, then we explain a new data model specialized in the IOT context. Our data model is inspired by the Data Provenance Model\footnote{\url{https://link.springer.com/content/pdf/10.1007\%2F978-3-319-68136-8.pdf}}.
 \lstset{stringstyle=\color{black}}
 
 
@@ -27,12 +28,44 @@ data points as input data points(IDP). A data point's IDP is a list of unique id
 [{
     "average": [   // Contribution type
         "5a81c07800031ddaf123",
-        "5a81c09300031d341fab"
+        "5a81c093000a1d341fab"
     ]
 }]		
 \end{lstlisting}
 	\end{itemize}
-	\item Context - Specific context for provenance may vary for different IoT applications. We propose a data model for the context in typical IoT environments comprising the concepts of Agents, Execution Context, as well as Time and Location information. An Agent is an entity that creates and/or modifies data points (e.g., sensor, software agent, device, etc.). It is recursively defined in such a way that an agent can contain other agents (e.g., a device containing several sensors). This recursion allows for defining agents in a hierarchy and may be used as fine-grained as required. For instance, an agent hierarchy may span from the concept of a particular function in a software library running over a virtualization container on a particular device to a particular IoT network.
+	\item Context - Specific context for provenance may vary for different IoT applications. We propose a data model for the context in typical IoT environments comprising the concepts of Agents, Execution Context, as well as Time and Location information (cf. \ref{dataModelContext}). An Agent is an entity that creates and/or modifies data points (e.g., sensor, device,  software agent, etc.). It is recursively defined in such a way that an agent can contain other agents (e.g., a device containing several sensors). This recursion allows for defining agents in a hierarchy and may be used as fine-grained as required. For instance, an agent hierarchy may span from the concept of a particular function in a software library running over a virtualization container on a particular device to a particular IoT network. Execution Context provides information related to the provenance event at runtimes, such as events or data points that triggered the creation/modification of the data point. Time and Location information is also added to the provenance information.
+\begin{figure}[h]
+\centering
+\includegraphics[width=\linewidth]{figures/context.png}\\
+\caption{Data Model Context}
+\label{dataModelContext}
+\end{figure}
+We chose two to three specific metrics for each of the above-mentioned context parameters based on our use-case and these metrics are listed below  (cf. \ref{idpDataModelContext}):
+		\begin{itemize}
+			\item Node/Machine  identifier
+			\item DP creation time
+			\item DP send time
+			\item DP receive time
+			\item Application name
+			\item Class name
+			\item Location
+			\item Line of code 
+			\item health status
+				\begin{itemize}
+					\item Node/Machiene
+					\item Channel
+					\item Provenance Daemon
+					\item Pipeline Daemon
+				\end{itemize}		
+		\end{itemize}
+We categorize these metrics into two main categories: core metrics and use-case specific metrics. Node/Machine identifier, DP creation time, DP send time, DP receive time and Location are the core metrics of our provenance system. All other metrics are use-case specific: Application name, class name and code line number are for debugging and tracing use-case while health status is for error detection use-case.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=\linewidth]{figures/contextIdp.png}\\
+\caption{Use-case specific Data Model Context}
+\label{idpDataModelContext}
+\end{figure}
 		
 \begin{figure}[h]
 \centering
