@@ -20,7 +20,7 @@ The frontend application gives user a very interactive dashboard. The above figu
 The frontend was developed with in-demand market technology like Javascript scripting language, Node.js, Express framework.
 
 \begin{description}
-    \item[Javascript] It was originally named Mocha is a “multi-paradigm language, supporting object-oriented, imperative, and functional programming styles.” [1] JavaScript started on web browsers as language to dynamically interact with the user and control the components of the page. JavaScript’s language architecture is quite unique from other languages which is especially handy when developing web application that rely on non-blocking operation.
+    \item[Javascript] It was originally named Mocha is a “multi-paradigm language, supporting object-oriented, imperative, and functional programming styles.” \cite{javascript} JavaScript started on web browsers as language to dynamically interact with the user and control the components of the page. JavaScript’s language architecture is quite unique from other languages which is especially handy when developing web application that rely on non-blocking operation.
     \newline
     \newline
     JavaScript architecture combines object-oriented, functional and scripting languages paradigms. Syntax wise, JavaScript is based on C’s structured layout, with subroutines, block structures and loops. While it is object
@@ -50,13 +50,14 @@ The frontend was developed with in-demand market technology like Javascript scri
         ions, Node can handle all user requests using a single thread, instead of allocation of new thread for each request, which has a large memory footprint. Nonetheless, Node does use a thread pool at the kernel level to guarantee that the operations are being executed asynchronously without blocking the event-loop. This is necessary because the kernel does not support all operations asynchronously.
     \end{itemize}
     \item[NPM] he Node Package Manager is based on JavaScript's npm. A built-in module that supports package management, it can be used to easily download and install modules for a Node application. Moreover, Node already has many packages and libraries developed to work on top of it; all of which confine to the asynchronous nature of Node.js.
-    \item[Express] Express is a fast, un-opinionated, minimalist web application framework for Node.js. It is designed for building web applications and is the de facto standard server framework for Node.js. Early 2016 the Express.js project was brought into the Node.js foundation as an incubating project. Express was itself a project in node generation which was split into three Github organizations called expressjs, pillarjs and jshttp. Express is a simple routing plus a sugar layer built on top of the actual base Node.js HTTP server that helps manage a server and the routes. It gives declarative routing without making s witch statements or i f statements or big functions, into a basic middleware pattern. [2]
+    \item[Express] Express is a fast, un-opinionated, minimalist web application framework for Node.js. It is designed for building web applications and is the de facto standard server framework for Node.js. Early 2016 the Express.js project was brought into the Node.js foundation as an incubating project. Express was itself a project in node generation which was split into three Github organizations called expressjs, pillarjs and jshttp. Express is a simple routing plus a sugar layer built on top of the actual base Node.js HTTP server that helps manage a server and the routes. It gives declarative routing without making s witch statements or i f statements or big functions, into a basic middleware pattern. \cite{express}
     \newline
     \newline
     One should already be familiar with JavaScript syntax and have Node.js installed to get started. There are many reasons why Express and Node are great choice for server side development.One major reason is that since Express is built on top of Node it is the perfect framework for ultra-fast input and output. Node.js is both asynchronous and single threaded- many requests can be made simultaneously without incurring of bottleneck that would slow down processing. The robust API that ships with express allows us to easily configure routes to send and receive
-    requests from a front-end and connect to a database. [2]
-    \item[Bootstrap Styling Framework] This  framework  has  become  one  of  the  most  popular  framework  and  used  by  popular website. This framework is  a  lightweight  and  modular  front-end  framework  [3].   It  provides  a powerful  web  interfaces for a fast development.
-    \item[Vis.js] A dynamic, browser based visualization library. The library is designed to be easy to use, to handle large amounts of dynamic data, and to enable manipulation of and interaction with the data. This library enabled use to visualize the nodes in the pipeline. and it was represented as DAG (Directed Arrow Graph). This library is licenses under Apache 4.0 and MIT [4].
+    requests from a front-end and connect to a database. \cite{express}
+    \item[Bootstrap Styling Framework] This  framework  has  become  one  of  the  mo
+    st  popular  framework  and  used  by  popular website. This framework is  a  lightweight  and  modular  front-end  framework  \cite{bootstrap}.   It  provides  a powerful  web  interfaces for a fast development.
+    \item[Vis.js] A dynamic, browser based visualization library. The library is designed to be easy to use, to handle large amounts of dynamic data, and to enable manipulation of and interaction with the data. This library enabled use to visualize the nodes in the pipeline. and it was represented as DAG (Directed Arrow Graph). This library is licenses under Apache 4.0 and MIT \cite{visjs}.
 \end{description}
 
 \subsubsection{Design}
@@ -89,7 +90,3 @@ Nodes are further more defined by colors. Node colors can be of 2 types (i) Gree
 Many action can be performed on the node visualization. On clicking of particular node it further retrieves provenance data that were generated. The provenance data is displayed in the form of table with all context information like Provenance Id, Location, ClassName, LineNo etc. The table houses 3 buttons, (i) Visualizing the provenance data generated along the pipeline, (ii) downloading the provenance lineage in JSON format, (iii) downloading provenance data recursively in JSON format.
 \newline
 Further on clicking on the Visualize Provenance data button, a the control redirects to a new page which visualizes the provenance data across the pipeline and showing all relevant context parameters generated during provenance data capture.
-
-
-\subsubsection{Frontend Requirements and Setup}
-TODO
