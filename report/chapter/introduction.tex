@@ -108,7 +108,81 @@ Initially only a "general" channel for discussions and a "links" channel for an 
 Next integrations for GitHub were added, which allowed to track commits and issues for each repository in a separate channel.
 Also over time, additional channels were created for more specific tasks, that allowed to keep conversations about different topics (e.g. organization of meetings vs. implementation issues with a certain component) separate, leading to a better overview and less "noise" for members not involved in a specific issue.
 
+\subsubsection{GitHub}
+
+GitHub was chosen as the tool for distributed version control for our coding efforts, again because of the familiarity of all team members.
+Different components of our software project were developed in different repositories, in order to keep a better overview and establish clear boundaries.
+
+The first repository that was created was \emph{Krymnos/IDP} which functioned as the main repository for GitHub issues and for the first component that was developed: the pipeline implementation needed for deploying and testing our system.
+Next the repository for the provenance daemon and API was created.
+Then the repositories for the Backend and Frontend services were created and lastly a repository for archiving the tools and setups we used to facilitate our benchmarks.
+The links to these repositories are listed in the order they were mentioned below. Details on the components that were developed and the benchmarks conducted can be found in Chapter 2 and 3 respectively.
+
+\begin{itemize}
+  \item https://github.com/Krymnos/IDP
+  \item https://github.com/Krymnos/Provenance-System-for-IoT
+  \item https://github.com/Krymnos/IDP-backend
+  \item https://github.com/Krymnos/IDP-frontend
+  \item https://github.com/Krymnos/idp-benchmark
+\end{itemize}
+
 \subsection{This Report}
+
+This final report was written by all members of the team. 
+The distribution of writing tasks was again done by personal preferences. 
+The Following table \ref{table:authors} lists the authors of each section.
+
+\begin{table}
+\begin{center}
+ \begin{tabular}{| m{18em} m{10em} |} 
+ \hline
+1. Introduction                                                   &                    \\
+ \hline
+* Basics of Provenance Systems                                    &     Talal               \\
+ \hline
+* Related Work                                                    &          Mukrram          \\
+ \hline
+* Project Organization                                            &         Ron           \\
+ \hline
+* Use Case                                                        &   Ron                 \\
+ \hline
+2. Approach / Implementation                                      &                    \\
+ \hline
+* Implementation Overview/Approach                                &    Mukrram                \\
+ \hline
+* Data Model                                                      &        Mukrram            \\
+ \hline
+* Pipeline Implementation                                         &      Kevin              \\
+ \hline
+* Provenance API                                                     &         Vinoth           \\
+ \hline
+* Cassandra as Provenance DB                                      &       Talal             \\
+ \hline
+* User Interface                                                  &           Darshan         \\
+ \hline
+* Backend                                                         &         Vinoth           \\
+ \hline
+* Frontend                                                        &    Darshan                \\
+ \hline
+* Testing \& Deployment  &  Gerrit         \\
+ \hline
+3. Benchmarks                                                     &                    \\
+ \hline
+* Introduction - Motivation                                             & Ron \\
+ \hline
+* Benchmark Overhead (Data Volume)      & Gerrit \\  
+ \hline
+* Benchmark Overhead (Latency)      & Talal \\  
+ \hline
+* Failure Benchmark                                             &       Vinoth     \\
+ \hline
+4. Conclusion                                                     &     Kevin               \\
+ \hline
+\end{tabular}
+\end{center}
+\caption{Authors of Sections}
+\label{table:authors}
+\end{table}
 
 
 \section{Use Case}
