@@ -2,12 +2,43 @@
 
 In this chapter we describe the Benchmarks we performed to evaluate our system. 
 The goals we had set beforehand are described in the Motivation section. 
-Then the implementation of each Benchmark, their results and our evalution are discussed seperately.
+Then the implementation of each Benchmark, their results and our evaluation are discussed separately.
 
 \section{Motivation}
 
-Based on the use-case described in the first chapter, we decided to evaluate our system firstly by looking at the overhead it adds to the bare pipeline implementation. Since this is one of the major concerns
+Based on the use-case described in the first chapter, we decided to evaluate our system firstly by looking at the overhead it adds to the bare pipeline implementation. 
+Since this is one of the major concerns for users that worry about fixed hardware limitations of their system.
 
+We distinguish two dimensions of overhead:
 
+\begin{itemize}
+  \item \textbf{Latency:} The time it takes for sensor value messages to be propagated through the pipeline.
+	\begin{itemize}
+	  \item Pipeline Latency: Difference in time between receiving a message at the first gateway and receiving it at the last gateway.
+	  \item Node Latency: Difference in time between receiving and relaying a message from one node.
+	  \item Channel Latency: Difference in time between sending and receiving a message in between two neighboring nodes.
+	  \item measured in Milliseconds
+	\end{itemize}
+  \item \textbf{Data Volume:} The amount of data that is send along the network.
+	\begin{itemize}
+	  \item Recorded as traffic going \textbf{in} to each gateway and \textbf{out} of each one.
+	  \item measured in KB/s
+	\end{itemize}
+\end{itemize}
 
+Looking at failure scenarios had the goal to evaluate the functionality of our system, especially in regard to the time it takes to detect failures.
+This was again motivated by our use case, where detecting failures in near real time was one the major goals for the grid administrators. 
+
+\vspace{3mm}
+
+When designing our benchmarks, we mainly made decisions based on the following assumptions we had about our systems at that point: 
+
+\begin{itemize}
+  \item The end user should receive notifications in near real time, i.e. within 10 seconds.
+  \item Increasing the number of recorded context parameters will increase latencies slightly.
+  \item Increasing the number of recorded context parameters will increase the data volume.
+  \item Using the provenance system will increase data volume by a factor of 2 or more, over the bare pipeline implementation.
+  \item There will be an ideal setting for the buffer capacity that is dependent on the remaining configuration.
+  \item The results of our benchmarks will only give us qualitative indications of how the system will perform on an actual smart grid.
+\end{itemize}
 
