@@ -8,7 +8,6 @@ We did the benchmarks for different topologies that stand for usual patterns tha
 To run the equal testconfiguration on every topology, we wrote a script\footnote{The script and the raw data of the measurments are available in the repository at \texttt{/benchmarks/overhead/benchmark.sh} and \texttt{/benchmarks/overhead/eval}} that goes through the steps shown in figure \ref{fig:benchmark}.
 The benchmark script runs a 120 seconds long benchmark run on each topology with all combinations of the following configurations:
 
-
 \begin{itemize}
 \item metrics configuration :
 
@@ -16,7 +15,6 @@ We executed runs with full provenance (\texttt{meterid,metricid,loc,line,class,a
 
 \item buffer sizes : \texttt{1,5,10}
 \end{itemize}
-
 
 \begin{figure}[H]
 	\center
@@ -47,8 +45,6 @@ The fields of the measurements are:
 \item BENCHMARK\_RUNTIME - runtime in seconds for the benchmark
 \end{itemize}
 
-
-
 \subsection{Test Cases}
 \paragraph*{Single-Node Topology}
 The purpose of the Single-Node Topology is to get the pure overhead that is produced only for one data item without any relaying of messages to other pipeline components.
@@ -69,11 +65,9 @@ We evaluated the proportion of the respective metrics by running each metric in 
 	\label{fig:metricsdistribution}
 \end{figure}
 
-
 To determine the message size of the measurement, we  used  "NORMALIZED\_MSG\_SIZE\_IN" stats of the endpoint for the "no\_provenance" case.
 
 The diagramm \ref{fig:metricsdistribution} shows, that the basic metrics and the location ("loc") are the largest parts of the message. The whole traffic is approximately 5 times bigger when the provenance system is used compared to the non-provenance case.
-
 
 \begin{figure}[H]
 	\center
@@ -83,7 +77,6 @@ The diagramm \ref{fig:metricsdistribution} shows, that the basic metrics and the
 \end{figure}
 
 By using different buffersizes (1,5,10) no improvement can be observed on diagram \ref{fig:buffersizes}. This option may not improve the used bandwidth due to already existing buffer mechanisms in the the used technologies for the system\footnote{for example GRPC}.
-
 
 \paragraph*{Two-Node Topology}
 The purpose if running the Two-Node topolotcy is to evaluate how much the overhead grows due to an enrichment of the provenance data. This topology consists of one sensor and two pipeline nodes (Gateway, Endpoint) which also produced provenance data.
@@ -102,8 +95,6 @@ The purpose if running the Two-Node topolotcy is to evaluate how much the overhe
 	\label{fig:topo1meanpermsg}
 \end{figure}
 
-
-
 \begin{figure}[H]
 	\center
 	\includegraphics[width=\textwidth]{figures/overheaddiagram7.png}
@@ -113,7 +104,6 @@ The purpose if running the Two-Node topolotcy is to evaluate how much the overhe
 
 The diagram \ref{fig:topo1meanpermsg} shows, that the per message size of the gateway node is approximately 100 bytes larger than for the endpoint. That suites well to our measurement in diagram \ref{fig:buffersizes}\footnote{The NORMALIZED\_MSG\_SIZE\_IN in \ref{fig:buffersizes} is around 100 Bytes large. This value can be interpreted as the data size of a single smart grid measurement}. The difference between the NORMALIZED\_MSG\_SIZE\_IN value of gateway and endpoint can be interpreted as the overhead if we assume that the "IN" value of the gateway stands for a measurement of sensor without provenance. The overhead in that case would be therefore round 100 bytes of data that is pushed to the next node (besides the provenance data that is also being sent to the provenance db). Here as well, it needs to be taken into account that these values are not pure message overheads but an overall impact of the whole system. For example the I/O stats also contain the Heartbeat-Messages that were send between gateway and endpoint.
 
-
 \begin{figure}[H]
 	\center
 	\includegraphics[width=\textwidth]{figures/overheaddiagram4.png}
@@ -121,15 +111,12 @@ The diagram \ref{fig:topo1meanpermsg} shows, that the per message size of the ga
 	\label{fig:topo1absoluteprov}
 \end{figure}
 
-
 \begin{figure}[H]
 	\center
 	\includegraphics[width=\textwidth]{figures/overheaddiagram8.png}
 	\caption{Absolute Net I/O for 7480 Messages (Topology 1)}
 	\label{fig:topo1absolutewithouotprov}
 \end{figure}
-
-
 
 \paragraph*{Fork-Node Topology}
 The Fork-Node topology consists of two sensor nodes which sends the measurements to two different gateways. These gateways (Gateway A,B) push the data to a common Gateway C. This Gateway sends the data further to another endpoint node.
@@ -141,11 +128,9 @@ The Fork-Node topology consists of two sensor nodes which sends the measurements
 	\label{fig:deployment}
 \end{figure}
 
-
 On this run of the benchmark we want answer the question whether the data overhead is growing on common gateways. As it can be observed in diagram \ref{fig:overhrad5} is the \texttt{NORMALIZED\_MSG\_SIZE\_IN} approximately 100 bytes larger than for gatewayA and gatewayB. This matches our observations in the previous benchmarks.
 If we compare diagram \ref{fig:overhrad5} (Full Provenance) and  \ref{fig:overhead6}, we can observe that the Net I/O for gatewayC grows. It's difficult to get an explanation why the mean data is bigger. One would expect that there is no difference between different gateways at least for the non-provenance case.
 However, we can assume that this growth of data traffic for gatewayC is not from the provenance system itself but from the pipeline implementation.
-
 
 \begin{figure}[H]
 	\center
@@ -160,7 +145,6 @@ However, we can assume that this growth of data traffic for gatewayC is not from
 	\caption{Mean Net I/O per Message (Topology 2)}
 	\label{fig:overhead6}
 \end{figure}
-
 
 \subsection{Conclusion}
 The data overhead was in our tests up to 5 times bigger than the real measurment data. This was also the case, when we used the minimal possible configuration for metrics \ref{fig:metricsdistribution} (2 times bigger).

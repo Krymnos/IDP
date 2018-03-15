@@ -1,11 +1,7 @@
 \chapter{Introduction}
 
-
-
-
 \section{Basics of Provenance Systems}
 Provenance is simply data quality. Provenance is the relationship among all elements that contributed to the existence of a piece of data.The provenance of data focuses on the history of changes and movement of data. The history of data changes can include subsetting, formatting, semantic transformation, syntactic transformation and ingesting new data to the existing data. To maintain or proved the quality of data the lineage of the data needs to collected throughout the data transformational process. The metadata to ensure the quality of the data is to be generated in systematic function. All the information about the elements and the relationship among all the elements (sources, processing steps, contextual information and dependencies) should include in the definition of provenance capturing. 
-
 
 There are clear differences between process provenance (focusing on workflow execution and the execution environment) and data provenance (focusing on creation and transformation of data). Understanding the type of provenance information of interest and how it will be used can help inform the decision for how to capture the provenance information. The provenance of data can often be collected automatically by saving system logs for events, system inputs, and system outputs but this kind of the provenance does not capture the insight and the rational decision made by the system. 
 
@@ -41,8 +37,13 @@ Provenance system should consider the finer granularity in which it captures the
 
 \section{Related Work}
 
-
-
+Historically, provenance systems were the focus of research in the database systems\footnote{\url{http://delivery.acm.org/10.1145/2610000/2602651/p10-carata.pdf}}, with the aim of understanding how and when materialized views should be updated in response to changes in the underlying tables. Because of the well-defined relational model, it has proven possible both to derive precise provenance information from queries and to develop formalisms that allow its concise representation. This has been further extended in systems such as Trio\footnote{\url{http://ilpubs.stanford.edu:8090/658/1/2004-40.pdf}}, allowing records to incorporate an associated uncertainty which can be propagated across multiple queries by using provenance.
+Existing provenance systems can be categorized into three main classes:
+\begin{enumerate}
+	\item Operating-system Level -  PASS\footnote{\url{https://www.usenix.net/legacy/events/usenix09/tech/full_papers/muniswamy-reddy/muniswamy-reddy.pdf}},\footnote{\url{https://www.usenix.org/legacy/event/usenix06/tech/full_papers/muniswamy-reddy/muniswamy-reddy.pdf}} and SPADE\footnote{\url{http://www.csl.sri.com/users/gehani/papers/MW-2012.SPADE.pdf}} investigate provenance by observing application events such as process creation or I/O. Those are then used for inferring dependencies among different pieces of data.
+	\item Workflows - VisTrails\footnote{\url{http://onlinelibrary.wiley.com/doi/10.1002/cpe.1237/abstract}} and ZOOM\footnote{\url{http://www.vldb.org/conf/2007/papers/demo/p1366-biton.pdf}} are workflow-management systems with the ability to track provenance for the execution of various workflows and (in the case of VisTrails) for the evolution of the workflows themselves.
+	\item Application Level - Burrito\footnote{\url{https://dash.harvard.edu/bitstream/handle/1/9938866/Guo_BURRITOWrapping.pdf?sequence=1}} tracks user-space events, while also supporting additional user-provided annotations. SPROV\footnote{\url{https://www.usenix.net/legacy/events/fast09/tech/full_papers/hasan/hasan.pdf}} focuses on the security of provenance and provides a thin wrapper around the standard C I/O library. A newer version is capable of using provenance captured by other systems, such as PASS.
+\end{enumerate}
 
 \section{Project Organization}
 
@@ -76,7 +77,9 @@ The Following table \ref{table:responsibilities} was set before the midterm pres
  \hline\hline
  IoT Pipeline & Kevin \\ 
  \hline
-Data Model + Provenance Collector & Mukrram \\
+Data Model & Mukrram \\
+ \hline
+Provenance Collector & Mukrram \\
  \hline
  Backend & Vinoth, Mukrram \\
  \hline
@@ -151,17 +154,17 @@ For a more detailed view on contributions to this report, please refer to the co
  \hline
 * Implementation Overview/Approach                                &    Mukrram                \\
  \hline
-* Data Model                                                      &        Mukrram            \\
- \hline
 * Pipeline Implementation                                         &      Kevin              \\
  \hline
-* Provenance API                                                     &         Mukrram           \\
+* Data Model                                                      &        Mukrram            \\
+ \hline
+* Provenance System                                                     &         Mukrram           \\
  \hline
 * Cassandra as Provenance DB                                      &       Talal             \\
  \hline
 * User Interface                                                  &           Darshan         \\
  \hline
-* Backend                                                         &         Vinoth           \\
+* Backend                                                         &         Vinoth \& Mukrram           \\
  \hline
 * Frontend                                                        &    Darshan                \\
  \hline
@@ -267,4 +270,3 @@ The following examples are written as user stories and intended to define what t
 \end{itemize}
 
 Once an issue is identified, it is assumed that the users will use their own tools and possibly physical access to solve them.
-

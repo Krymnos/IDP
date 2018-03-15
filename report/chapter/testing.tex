@@ -22,7 +22,6 @@ On this way, other parts of the project could include the artifacts by using exp
 	\label{fig:deployment}
 \end{figure}
 
-
 We used Travis CI\footnote{\url{https://travis-ci.org/Krymnos/IDP}} as Continuous Integration Solution that is free for Open-Source Projects. Travis builds are triggered on changes for every branch of the repository that contains a valid \emph{travis.yaml}.
 The testing configuration was set inside of the \emph{travis.yaml} that was present in each repository. Some components needed additional configuration to get builds and tests running. For instance, the Pipeline Component needs the protobuf executables to generate the communication interfaces during a build. After the compilation is finished, the unit tests of the Pipeline requires a running \emph{Redis}-Database as local storage. All these configurations could be made by the \texttt{before-script} and \texttt{before-install} sections inside the \texttt{travis.yaml} by using the built-in services of travis\footnote{\url{https://docs.travis-ci.com/user/database-setup/}}. As an example, the travis.yaml for the pipeline component can be found in the appendix (\ref{lst:pipelineyaml}).
 At the same file a \emph{deployment}-section was defined and only executed if the branchname is equal to "deployment". For the components that are delivered as docker builds, the respective docker deployment script was executed (\ref{lst:dockerdeploy}), for the Provenance API that is included by the Pipeline Component, the artifacts were pushed to our Maven Repository\footnote{\url{https://packagecloud.io/gerritja/IDP}}. The docker deployment script pushed the docker images to \emph{Docker Hub}-Repository of our project\footnote{\url{https://hub.docker.com/r/cloudproto/}}.
@@ -46,7 +45,6 @@ The topology can be started on any machine that has Docker installed and a docke
 	\item command for docker-compose: 
 		$$\texttt{docker-compose -f <composefile> up} $$
 \end{itemize}
-
 
 \subsection{Docker Swarm on AWS}
 Due to the machine in-dependability of docker containers we're able to deploy our topology locally but also along distributed machines.
@@ -77,10 +75,8 @@ We modified the sensor code in a way, that a sensor calls the REST endpoint of t
 
 The appendix contains a simple example of mounting the S3 bucket and the id coordinator approach (\ref{lst:sensorsscale}).
 
-
 \subsubsection*{Deployment of the complete stack}
 We created different versions of compose files with different Topologies and all components. The files can be found in the IDP-Repository at: \texttt{compose-files}\footnote{https://github.com/Krymnos/IDP/tree/master/compose\_files}. In this folder exists also a readme that describes, how to instantiate a topology locally  with \emph{docker-compose}\footnote{ Some compose files containing special constraints for AWS, for instance to schedule nodes in different availability zones.}. Figure \ref{fig:finaldeployment} shows the general scheme for the deployment on AWS.
-
 
 \begin{figure}[H]
 	\center

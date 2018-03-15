@@ -8,7 +8,6 @@ We performed several experiments with different provenance configurations and ex
 \subsection{Test Setup and Configuration} \label{testsetup}
 To run the benchmarks we used Amazon as the Cloud provider, which is an industry standard for hosting scalable services. We use Amazon Elastic Container Service which is a highly scalable, high-performance container orchestration service that supports Docker containers and allows you to easily run and scale containerized applications on AWS. In order to minimize the effect of AWS CPU and I/O variability, we performed each test three times on three different periods of different days.  New instances of t2.large\footnote{Hardware specification : \texttt{https://aws.amazon.com/ec2/instance-types/t2/} } EC2 instances, using the already configured auto-scaling group  was used to further reduce the impact of the lame instance and noisy neighbor on the benchmark results. 
 
-
 \paragraph*{Executing the benchmark}
 To run the benchmark on each topology, we wrote a script\footnote{Link:\url{https://github.com/Krymnos/idp-benchmark/blob/benchmark-latency/benchmark_template.sh} } which takes two parameters: the topology to run in the docker-compose file and the internet protocol address of the EC2 instance.
 
@@ -44,7 +43,6 @@ For every topology we run the benchmark procedure \ref{fig:benchmark_latency} wh
 	metricid,ctime,stime,rtime
 \end{itemize}
 
-
 \subsection{Two-Node Topology}
 This is the base case for the latency overhead benchmark as we need to know the latency overhead of the system when we are running with bare minimal requirements to conduct the benchmark. This will provide us the threshold so that we could differentiate when running with different configuration of the system and topologies. This topology consists of one sensor and two pipeline nodes (Gateway, Endpoint) which produce provenance data. 
 
@@ -67,7 +65,6 @@ to travel from Gateway to the Endpoint labeled as Hop:1.
 
 From the diagram \ref{fig:twotopology_latency}, its is clearly shown that the message propagating without provenance information has the smallest latency. Furthermore, we can see a clear difference in the latency when using full context compare to using six or four context parameters for running the provenance system. Mean latency for Two Node Topology\ref{fig:two_topo} using six contexts or four context does not depict a large difference. Possible reasons for this could be the sizes of messages, as well as the amount of computations needed to collect and package the information.
 
-
 \subsection*{Triangle Topology}The idea behind using this topology for the next benchmark is to check if there is any fluctuation or changes in the reading when adding another gateway to send data point to the endpoint. This will help us to check how the provenance system performs in case of adding nodes vertically to the architecture. The Triangle topology consists of two sensor nodes which send the measurements to two different gateways. These gateways (Gateway A, B) push the data to a common Endpoint.
 
 \begin{figure}[H]
@@ -85,7 +82,6 @@ to travel from Gateway (A,B) to the Endpoint labeled as Hop:1  and Hop:2.
 	\caption{Mean Latency for collected Data-points  (Triangle Node Topology)}
 	\label{fig:triangletopology_latency}
 \end{figure}
-
 
 From the diagram \ref{fig:triangletopology_latency}, the mean latency per both hops are similar. There is not much difference in mean time to travel from the Gateways(A, B) to Endpoint but there is a clear difference to the mean latency compare to the figure \ref{fig:twotopology_latency} that the mean latency increase for the all four experiment. The reason behind this might be that the Endpoint is receiving messages from two nodes instead of one node thus there is a visible difference in the measurement which is around ~8 percent average increase in mean latency. There is visible performance degradation when a single node is receiving messages from two nodes as seen from the benchmark results.
 
@@ -123,7 +119,6 @@ The diagram \ref{fig:linetopology_latency}  shows a visible increase in mean lat
 
 Figure \ref{fig:linetopology_sum_latency} shows that due to small increase in latency on the gatewayB there is a visible difference when changing the contexts parameters from six to full especially in the case when the node is responsible of sending and receiving data-points along the node.
 
-
 \subsection{Fork Node Topology}
 The aim for this benchmark is to see the combined effect of increasing the nodes horizontally and vertically in the architecture and evaluate the latency overhead for the pipeline. The Fork-Node topology consists of two sensor nodes which send the measurements to two different gateways. These gateways (Gateway A,B) push the data to a common GatewayC. This Gateway C sends the data further to another endpoint node.
 
@@ -155,7 +150,6 @@ The end user should keep these results in mind when considering which parameters
 However, for the use case of the grid administrators where humans are reacting to failure notifications, it seems fair to say that using all 10 context parameters is feasible, since one or two seconds faster response time will not make much of a difference.
 It can also be seen from the benchmarks results that the mean node latency for each hop remains consistent with no drastic changes when increasing the hops in the pipeline design, suggesting a good scalability of the system, at least for a small scale deployment such as we had the resources to test.
 
-
 \paragraph*{Changing the Buffer Capacity}
 After analyzing the effect of changing context parameter setting of the provenance system we need to see the effect of buffer capacity on the system in term of latency so that we know the capacity at which the system ingest data with minimal overhead. In this we want to know that if the data ingestion rate of the provenance system effect the node latency or not.
 Everything was kept same as in the test setup \ref{testsetup} beside the Buffer Capacity : (10,50,100) running only on Fork Node Topology\ref{fig:fork_topo}.
@@ -174,8 +168,5 @@ Everything was kept same as in the test setup \ref{testsetup} beside the Buffer 
 	\label{fig:forktopo_latency_buffer}
 \end{figure}
 
-
 \paragraph*{Conclusion}
 As seen from figure \ref{fig:forktopo_latency_buffer} and figure\ref{fig:forktopo_latency_buffer} that the provenance system perform better when the buffer capacity setting is set to 50 messages. The reason behind this could be the implementation of the pipeline itself and also consider another functionality of the provenance system HeartBeat messages of the system which create network overhead. Latency difference could also be due to the bottleneck of the GatewayC. Fifty multiply by message size sent is a perfect size for the network bandwidth used by the service hence the difference in changing the buffer size explained without making a network congestion on the whole system being the sweet spot of the provenance system.
-
-

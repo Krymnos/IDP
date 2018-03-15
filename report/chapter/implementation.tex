@@ -4,6 +4,14 @@
 To explain the implementation decisions that went into this project, we will first give an overview of what we aimed to accomplish at the beginning of the project, before explaining how each component got implemented in detail.
 
 \section{Implementation Overview}
+When we started implementing provenance system, we were more concerned about the efficient usage of the provenance system. It took a while for us to grab the following aspects:
+\begin{enumerate}
+	\item The exact metadata being captured. 
+	\item The effort required for integrating provenance systems within existing systems.
+	\item Understanding how provenance metadata can be queried later.
+	\item Evaluating the overhead imposed by those systems.
+	\item Security issues added by provenance, which might require different access controls from those of the data itself.
+\end{enumerate}
+As you continue reading this report, you will realize that we took all of the above-mentioned aspects into account except security and that is out of the scope of this work.
 
-TODO
 
