@@ -78,7 +78,7 @@ Taking into account the data model of a measurement message, the decision was ma
 Redis meets all the requirements such as high performance on write operations. Even though it is an in-memory database it also provides the possibility of being persistent. Snapshots and write operation logs, can be used to provide persistence \cite{redis}. 
 
 The following section will provide an overview on the implementation and explains the most important parts of it in detail.
-\subsection{Implementation}
+\subsection{Implementation} \label{pipeline_implementation}
 
 \begin{figure}[h]
 \centering
