@@ -1,0 +1,133 @@
+\section{Appendix}
+
+\begin{lstlisting}[label=lst:pipelineyaml, postbreak=\mbox{\textcolor{red}{$\hookrightarrow$}\space},breaklines=true, basicstyle=\small,caption=.travis.yaml for pipeline component]
+sudo: true
+language: java
+
+services:
+  - redis-server
+
+before_install:
+    - wget https://repo1.maven.org/maven2/com/google/protobuf/ protoc/3.5.0/protoc-3.5.0-linux-x86_64.exe
+    - mvn install:install-file -DgroupId=com.google.protobuf -DartifactId=protoc -Dversion=3.5.0 -Dclassifier=linux-x86_64-debian -Dpackaging=exe -Dfile=./protoc-3.5.0-linux-x86_64.exe
+    - wget http://maven.aliyun.com/nexus/content/groups/public/ io/grpc/protoc-gen-grpc-java/ 1.8.0/protoc-gen-grpc-java-1.8.0-linux-x86_64.exe
+    - mvn install:install-file -DgroupId=io.grpc -DartifactId=protoc-gen-grpc-java -Dversion=1.8.0 -Dclassifier=linux-x86_64-debian -Dpackaging=exe -Dfile=./protoc-gen-grpc-java-1.8.0-linux-x86_64.exe
+before_script: cd pipeline_interfaces/java_project/pipeline
+
+script: mvn package
+
+deploy:
+  provider: script
+  script: ./deploy_docker.sh
+  skip_cleanup: true
+  on:
+    branch: deployment
+\end{lstlisting}
+
+
+\begin{lstlisting}[label=lst:dockerdeploy, basicstyle=\small,caption=docker deployment script  for pipeline component]
+#!/bin/bash
+docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
+docker build -t pipeline_java .
+docker images
+docker tag pipeline_java cloudproto/pipeline_component
+docker push cloudproto/pipeline_component
+\end{lstlisting}
+
+\begin{lstlisting}[label=lst:pipelinedockerfile, basicstyle=\small,caption=Dockerfile for Pipeline Component] deployment FROM mlaccetti/docker-oracle-java8-ubuntu-16.04
+
+# Update the repository and install Redis Server
+RUN         apt-get update && apt-get install -y redis-server
+RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+## pipeline stuff
+ADD target/pipeline-0.1-jar-with-dependencies.jar app.jar
+RUN sh -c 'touch /app.jar'
+ENV JAVA_OPTS=""
+ENV ARGUMENTS=""
+ENV STARTUP_DELAY=20
+
+# default values for provenance system
+ENV CONF_LOC=EVAR
+ENV NODE_ID=000000
+ENV NODE_NAME=NONAME
+ENV SUCCESSOR=000000
+ENV NEIGHBOURS=000000:127.0.0.1
+ENV SINK=cassandra
+ENV CASSANDRA_HOST=127.0.0.1
+ENV CASSANDRA_PORT=9042
+ENV CASSANDRA_KEYSPACE_NAME=provenancekey
+ENV CASSANDRA_TABLE_NAME=provenancetable
+ENV CASSANDRA_REPLICATION_STRATEGY=SimpleStrategy
+ENV CASSANDRA_REPLICATION_FACTOR=1
+ENV BUFFER_CAPACITY=10
+ENV METRICS=meterid,metricid,loc,line,class,app,ctime,stime,rtime
+
+ENTRYPOINT [ "sh", "-c", "/usr/bin/redis-server --daemonize yes && sleep ${STARTUP_DELAY} && java $JAVA_OPTS -Djava.security.egd=file:/dev/./urandom -jar /app.jar $ARGUMENTS " ]
+\end{lstlisting}
+
+\begin{lstlisting}[label=lst:simpletopology, basicstyle=\small,caption=Simple Topology without Provenance System]
+version: '3'
+services:
+  source:
+    image: cloudproto/sensor:latest
+    environment:
+      - SENSOR_PARAMETERS=-sourceFolder data/20170210 -frequency 1000 -targetAddress gateway:50051 -targetType grpc-pipeline
+      - STARTUP_DELAY=60
+gateway:
+    image: cloudproto/pipeline_component:latest
+    environment:
+      - ARGUMENTS=--port 50051 --host_next endpoint --port_next 50051 --storagetime 100 --no_prov
+endpoint:
+    image: cloudproto/pipeline_component:latest
+    environment:
+      - ARGUMENTS=--port 50051 --storagetime 100 --no_prov
+\end{lstlisting}
+
+\begin{lstlisting}[label=lst:sensors3, basicstyle=\small,caption=Example for use of Sensor Image by mounting S3 Bucket]
+image: cloudproto/sensor:s3
+    privileged: true
+    environment:
+        - BUCKET=provenancesensordata:oneday
+        - AWS_ACCESS_KEY_ID=ADD_YOUR_ACCESS_KEY
+        - AWS_SECRET_ACCESS_KEY=ADD_YOUR_SECRET_KEY
+        - REGION=eu-central-1
+        - SENSOR_PARAMETERS=-sourceFolder /mnt/s3/31400010000000000 -targetAddress gateway:50051 -targetType grpc-pipeline
+        - STARTUP_DELAY=10
+\end{lstlisting}
+
+
+\begin{lstlisting}[label=lst:sensorsscale, basicstyle=\small,caption=Example for scalable sensor groups with unique sensor containers]
+
+version: '3'
+
+# to use the provenance volume it's mandatory to install the rexray/s3 plugin
+# docker plugin install rexray/s3fs:latest S3FS_ACCESSKEY=XXXXX S3FS_SECRETKEY=XXXXXX
+
+volumes:
+    provenancesensordata:
+        external: true
+
+services:
+    cassandra:
+        image: cassandra:latest
+
+## sensor container can retrieve unique sensor ids from this service
+    idprovider:
+        image: cloudproto/idprovider:latest
+        environment:
+            - START_ID=31400010000000000
+
+    sensorGroupA:
+        image: cloudproto/sensor:latest
+        depends_on:
+            - gateway
+            - idprovider
+        restart: always
+        volumes:
+            - provenancesensordata:/mnt
+        environment:
+            - SENSOR_PARAMETERS=-sourceFolder /mnt/oneday -sensorIdProvider idprovider:8080 -frequency 1000 -targetAddress gateway:50051 -targetType grpc-pipeline
+            - STARTUP_DELAY=30
+[...]            
+\end{lstlisting}

@@ -1,0 +1,52 @@
+\chapter{Dummy Chapter}
+
+\section{Dummy Section}
+
+\subsection{Dummy Sub-Section}
+
+\begin{figure}
+	\includegraphics[width=\textwidth]{figures/tu_logo.jpg}
+	\caption{Logo TU Berlin}
+	\label{fig:tu-logo}
+\end{figure}
+
+This is a dummy reference \cite{dummy} and a dummy footnote \footnote{dummy} with akronym \ac{aws}
+
+
+\begin{figure}
+\begin{center}
+\begin{lstlisting}[label=lst:dummycode, caption=dummycode]
+/**
+ * This is a doc comment.
+ */
+package com.ociweb.jnb.lombok;
+
+import java.util.Date;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NonNull;
+
+$$@Data
+$$@EqualsAndHashCode(exclude={"address","city","state","zip"})
+public class Person {
+    enum Gender { Male, Female }
+
+    // another comment
+
+    %%@NonNull%% private String firstName;
+    %%@NonNull%% private String lastName;
+    %%@NonNull%% private final Gender gender;
+    %%@NonNull%% private final Date dateOfBirth;
+
+    private String ssn;
+    private String address;
+    private String city;
+    private String state;
+    private String zip;
+}
+\end{lstlisting}
+\end{center}
+
+\end{figure}
+
+This was a code lsting: \ref{lst:dummycode} 

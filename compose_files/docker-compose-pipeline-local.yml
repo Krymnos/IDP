@@ -8,13 +8,17 @@ services:
         depends_on:
             - gateway
         restart: always
-        command: [ "sh", "-c", "sleep 30 && ./smemu -sourceFolder data/20170210 -targetAddress gateway:50051 -targetType grpc-pipeline -frequency 10000" ]
+        environment:
+            - SENSOR_PARAMETERS=-sourceFolder data/20170210 -targetAddress gateway:50051 -targetType grpc-pipeline -frequency 10000
+            - STARTUP_DELAY=30
+
     gateway:
         image: pipeline_java:latest
         environment:
             - CASSANDRA_HOST=cassandra
             - NODE_ID=000001
             - NODE_NAME=gateway
+            - STARTUP_DELAY=20
             - ARGUMENTS=--port 50051 --host_next endpoint --port_next 50051
         depends_on:
             - endpoint
@@ -25,6 +29,7 @@ services:
             - cassandra
         environment:
             - CASSANDRA_HOST=cassandra
+            - STARTUP_DELAY=20
             - ARGUMENTS=--port 50051
             - NODE_ID=000002
             - NODE_NAME=endpoint
